@@ -38,6 +38,8 @@ MAX_ROWS_IN_CONTEXT = 10       # 이 이하면 텍스트로 반환
 OUTPUT_DIR = "query_outputs"    # CSV 저장 폴더
 last_query_results = {"data": None}  # tool과 run_sql_agent가 공유하는 전역 상태
 
+USE_TABLE_FILTERING = False   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
+
 AGENT_PREFIX = """You are a SQL expert connected to a PostgreSQL database.
 
 Rules:
@@ -51,7 +53,10 @@ Rules:
 8. Always alias aggregate functions. (e.g. COUNT(*) AS count, SUM(amount) AS total)
 
 Metadata Format:
-- col_name(Type) | Label | VirtualColumn | Description
+- Each table starts with [Table: table_name]
+- Each column is listed as "col_name (type): description"
+- If a column has an indented "values:" line below it, that line lists the possible values or format notes for that column verbatim — read it carefully before filtering/comparing on that column.
+- [Joins] section (if present) lists the recommended JOIN conditions between the selected tables.
 """
 
 # ------------- 로그 관련 설정  -------------
@@ -82,7 +87,7 @@ sys.stderr = sys.stdout
 
 
 def get_extracted_tables() -> list[str]:
-    table_files = glob.glob("filtered_metadata/tables/*.json")
+    table_files = glob.glob("metadata/tables/*.json")
     return [Path(f).stem for f in table_files]
 
 ALL_TABLES: list[str] = get_extracted_tables()
@@ -203,8 +208,12 @@ def load_metadata_for_query(user_input: str) -> tuple[list[str], str, str]:
     사용자 질문에서 관련 테이블을 찾고 메타데이터를 로드한다.
     Returns: (relevant_tables, table_meta, rel_meta)
     """
-    llm = get_llm()
-    relevant_tables = get_relevant_tables(user_input, llm, ALL_TABLES)
+    if USE_TABLE_FILTERING:
+        llm = get_llm()
+        relevant_tables = get_relevant_tables(user_input, llm, ALL_TABLES)
+    else:
+        relevant_tables = ALL_TABLES
+
     table_meta = load_table_metadata(relevant_tables)
     rel_meta = load_relationships(relevant_tables)
 
