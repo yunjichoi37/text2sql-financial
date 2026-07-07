@@ -8,7 +8,7 @@ RELATIONSHIPS_PATH = Path("metadata/relationships.json")
 DOMAIN_GUIDE_PATH = Path("metadata/domain_guide.txt")
 
 def get_relevant_tables(user_question: str, llm, all_tables: list) -> list:
-    # 1단계: 각 테이블의 summary만 보고 필요한 테이블 선택
+    # 1단계: 각 테이블의 summary와 컬럼명만 보고 필요한 테이블 선택
     # 메타 파일 없으면 테이블명만으로 fallback
     domain_guide = ""
     if DOMAIN_GUIDE_PATH.exists():
@@ -21,9 +21,15 @@ def get_relevant_tables(user_question: str, llm, all_tables: list) -> list:
             with open(json_path, "r", encoding="utf-8-sig") as f:
                 meta = json.load(f)
             summary = meta.get("summary") or "설명 없음"
+            columns = ", ".join(meta.get("columns", {}).keys())
         else:
             summary = "(메타데이터 없음)"
-        table_summaries.append(f"- {table}: {summary}")
+            columns = ""
+
+        line = f"- {table}: {summary}"
+        if columns:
+            line += f" (columns: {columns})"
+        table_summaries.append(line)
 
     prompt = f"""{domain_guide}
 
