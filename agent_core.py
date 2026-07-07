@@ -61,6 +61,8 @@ Metadata Format:
 - [Joins] section (if present) lists the recommended JOIN conditions between the selected tables.
 """
 
+QUERY_REMINDER = "\n\nReminder: use ILIKE (never '=') for any TEXT column literal comparison."
+
 # ------------- 로그 관련 설정  -------------
 import sys
 
@@ -284,6 +286,7 @@ def run_query(user_input: str) -> dict:
         dynamic_prefix += f"\n\n{table_meta}"
     if rel_meta:
         dynamic_prefix += f"\n\n{rel_meta}"
+    dynamic_prefix += QUERY_REMINDER
     print(table_meta)
     print(rel_meta)
 
