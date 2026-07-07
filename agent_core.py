@@ -263,7 +263,7 @@ type은 bar, line, pie 중 하나입니다.
 
     try:
         response = llm.invoke([HumanMessage(content=prompt)])
-        match = re.search(r'\{.*\}', response.content, re.DOTALL)
+        match = re.search(r'\{.*\}', response.text, re.DOTALL)
         if not match:
             return {"possible": False}
 
@@ -311,7 +311,7 @@ def run_query(user_input: str) -> dict:
         answer = ""
         for msg in reversed(messages):
             if isinstance(msg, AIMessage) and not msg.tool_calls:
-                answer = msg.content
+                answer = msg.text
                 break
 
         intermediate_steps = _extract_intermediate_steps(messages)

@@ -44,7 +44,7 @@ def get_relevant_tables(user_question: str, llm, all_tables: list) -> list:
 예시: product, customer"""
 
     response = llm.invoke([HumanMessage(content=prompt)])
-    selected = [t.strip() for t in response.content.split(",")]
+    selected = [t.strip() for t in response.text.split(",")]
     return [t for t in selected if t in all_tables]
 
 
