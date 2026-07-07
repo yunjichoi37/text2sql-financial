@@ -1,0 +1,50 @@
+[
+  {
+    "from_table": "account",
+    "from_col": "district_id",
+    "to_table": "district",
+    "to_col": "district_id"
+  },
+  {
+    "from_table": "card",
+    "from_col": "disp_id",
+    "to_table": "disp",
+    "to_col": "disp_id"
+  },
+  {
+    "from_table": "client",
+    "from_col": "district_id",
+    "to_table": "district",
+    "to_col": "district_id"
+  },
+  {
+    "from_table": "disp",
+    "from_col": "client_id",
+    "to_table": "client",
+    "to_col": "client_id"
+  },
+  {
+    "from_table": "disp",
+    "from_col": "account_id",
+    "to_table": "account",
+    "to_col": "account_id"
+  },
+  {
+    "from_table": "loan",
+    "from_col": "account_id",
+    "to_table": "account",
+    "to_col": "account_id"
+  },
+  {
+    "from_table": "order",
+    "from_col": "account_id",
+    "to_table": "account",
+    "to_col": "account_id"
+  },
+  {
+    "from_table": "trans",
+    "from_col": "account_id",
+    "to_table": "account",
+    "to_col": "account_id"
+  }
+]

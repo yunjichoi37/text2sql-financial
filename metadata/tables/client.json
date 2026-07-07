@@ -1,0 +1,23 @@
+{
+  "summary": "",
+  "columns": {
+    "client_id": {
+      "type": "integer",
+      "desc": "the unique number"
+    },
+    "gender": {
+      "type": "text",
+      "desc": "",
+      "values": "F：female \nM：male"
+    },
+    "birth_date": {
+      "type": "date",
+      "desc": "birth date"
+    },
+    "district_id": {
+      "type": "integer",
+      "desc": "location of branch"
+    }
+  },
+  "notes": ""
+}

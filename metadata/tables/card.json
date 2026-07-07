@@ -1,0 +1,24 @@
+{
+  "summary": "",
+  "columns": {
+    "card_id": {
+      "type": "integer",
+      "desc": "credit card id, id number of credit card"
+    },
+    "disp_id": {
+      "type": "integer",
+      "desc": "disposition id"
+    },
+    "type": {
+      "type": "text",
+      "desc": "type of credit card",
+      "values": "\"junior\": junior class of credit card; \n\"classic\": standard class of credit card; \n\"gold\": high-level credit card"
+    },
+    "issued": {
+      "type": "date",
+      "desc": "the date when the credit card issued",
+      "values": "in the form YYMMDD"
+    }
+  },
+  "notes": ""
+}

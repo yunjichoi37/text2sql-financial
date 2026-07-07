@@ -1,0 +1,38 @@
+{
+  "summary": "",
+  "columns": {
+    "loan_id": {
+      "type": "integer",
+      "desc": "the id number identifying the loan data"
+    },
+    "account_id": {
+      "type": "integer",
+      "desc": "the id number identifying the account"
+    },
+    "date": {
+      "type": "date",
+      "desc": "the date when the loan is approved"
+    },
+    "amount": {
+      "type": "integer",
+      "desc": "approved amount",
+      "values": "unit：US dollar"
+    },
+    "duration": {
+      "type": "integer",
+      "desc": "loan duration",
+      "values": "unit：month"
+    },
+    "payments": {
+      "type": "real",
+      "desc": "monthly payments",
+      "values": "unit：month"
+    },
+    "status": {
+      "type": "text",
+      "desc": "repayment status",
+      "values": "'A' stands for contract finished, no problems;\n'B' stands for contract finished, loan not paid;\n'C' stands for running contract, OK so far;\n'D' stands for running contract, client in debt"
+    }
+  },
+  "notes": ""
+}

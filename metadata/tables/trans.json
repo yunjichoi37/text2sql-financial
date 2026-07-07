@@ -1,0 +1,52 @@
+{
+  "summary": "",
+  "columns": {
+    "trans_id": {
+      "type": "integer",
+      "desc": "transaction id"
+    },
+    "account_id": {
+      "type": "integer",
+      "desc": ""
+    },
+    "date": {
+      "type": "date",
+      "desc": "date of transaction"
+    },
+    "type": {
+      "type": "text",
+      "desc": "+/- transaction",
+      "values": "\"PRIJEM\" stands for credit\n\"VYDAJ\" stands for withdrawal"
+    },
+    "operation": {
+      "type": "text",
+      "desc": "mode of transaction",
+      "values": "\"VYBER KARTOU\": credit card withdrawal\n\"VKLAD\": credit in cash\n\"PREVOD Z UCTU\" :collection from another bank\n\"VYBER\": withdrawal in cash\n\"PREVOD NA UCET\": remittance to another bank"
+    },
+    "amount": {
+      "type": "integer",
+      "desc": "amount of money",
+      "values": "Unit：USD"
+    },
+    "balance": {
+      "type": "integer",
+      "desc": "balance after transaction",
+      "values": "Unit：USD"
+    },
+    "k_symbol": {
+      "type": "text",
+      "desc": "characterization of the transaction",
+      "values": "\"POJISTNE\": stands for insurrance payment\n\"SLUZBY\": stands for payment for statement\n\"UROK\": stands for interest credited\n\"SANKC. UROK\": sanction interest if negative balance\n\"SIPO\": stands for household\n\"DUCHOD\": stands for old-age pension\n\"UVER\": stands for loan payment"
+    },
+    "bank": {
+      "type": "text",
+      "desc": "bank of the partner",
+      "values": "each bank has unique two-letter code"
+    },
+    "account": {
+      "type": "integer",
+      "desc": "account of the partner"
+    }
+  },
+  "notes": ""
+}

@@ -1,0 +1,24 @@
+{
+  "summary": "",
+  "columns": {
+    "account_id": {
+      "type": "integer",
+      "desc": "account id, the id of the account"
+    },
+    "district_id": {
+      "type": "integer",
+      "desc": "location of branch"
+    },
+    "frequency": {
+      "type": "text",
+      "desc": "frequency, frequency of the acount",
+      "values": "\"POPLATEK MESICNE\" stands for monthly issuance\n\"POPLATEK TYDNE\" stands for weekly issuance\n\"POPLATEK PO OBRATU\" stands for issuance after transaction"
+    },
+    "date": {
+      "type": "date",
+      "desc": "date, the creation date of the account",
+      "values": "in the form YYMMDD"
+    }
+  },
+  "notes": ""
+}

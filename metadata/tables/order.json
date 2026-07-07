@@ -1,0 +1,32 @@
+{
+  "summary": "",
+  "columns": {
+    "order_id": {
+      "type": "integer",
+      "desc": "identifying the unique order"
+    },
+    "account_id": {
+      "type": "integer",
+      "desc": "id number of account"
+    },
+    "bank_to": {
+      "type": "text",
+      "desc": "bank of the recipient"
+    },
+    "account_to": {
+      "type": "integer",
+      "desc": "account of the recipient",
+      "values": "each bank has unique two-letter code"
+    },
+    "amount": {
+      "type": "real",
+      "desc": "debited amount"
+    },
+    "k_symbol": {
+      "type": "text",
+      "desc": "characterization of the payment, purpose of the payment",
+      "values": "\"POJISTNE\" stands for insurance payment\n\"SIPO\" stands for household payment\n\"LEASING\" stands for leasing\n\"UVER\" stands for loan payment"
+    }
+  },
+  "notes": ""
+}

@@ -1,0 +1,23 @@
+{
+  "summary": "",
+  "columns": {
+    "disp_id": {
+      "type": "integer",
+      "desc": "disposition id, unique number of identifying this row of record"
+    },
+    "client_id": {
+      "type": "integer",
+      "desc": "id number of client"
+    },
+    "account_id": {
+      "type": "integer",
+      "desc": "id number of account"
+    },
+    "type": {
+      "type": "text",
+      "desc": "type of disposition",
+      "values": "\"OWNER\" : \"USER\" : \"DISPONENT\"\ncommonsense evidence:\nthe account can only have the right to issue permanent orders or apply for loans"
+    }
+  },
+  "notes": ""
+}
