@@ -161,6 +161,16 @@ def execute_sql_query(sql_query: str) -> str:
             conn.close()
 
 
+def run_raw_sql(sql_query: str) -> pd.DataFrame:
+    """사용자가 직접 입력한 SQL을 실행하고 결과를 DataFrame으로 반환(AI 개입 없음)"""
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        conn.autocommit = True
+        return pd.read_sql_query(sql_query, conn)
+    finally:
+        conn.close()
+
+
 def save_csv_if_needed() -> tuple[str | None, pd.DataFrame | None]:
     """last_query_results에 데이터가 있으면 CSV로 저장하고 경로 반환"""
     

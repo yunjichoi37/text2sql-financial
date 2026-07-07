@@ -2,11 +2,21 @@
 import pandas as pd
 import streamlit as st
 
-from agent_core import run_query
+from agent_core import run_query, run_raw_sql
 
 
 st.set_page_config(page_title="SQL Agent", layout="wide")
 st.title("SQL Agent")
+
+with st.sidebar:
+    st.subheader("SQL 직접 실행")
+    raw_sql = st.text_area("SQL 입력", height=150)
+    if st.button("실행", key="run_raw_sql"):
+        try:
+            df = run_raw_sql(raw_sql)
+            st.dataframe(df)
+        except Exception as e:
+            st.error(f"SQL 실행 에러: {e}")
 
 # 세션 상태 초기화 (채팅 기록 저장용)
 if "messages" not in st.session_state:
