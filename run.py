@@ -7,7 +7,7 @@ from agent_core import run_query
 
 
 def check_env() -> None:
-    required = ["DATABASE_URL", "GROQ_API_KEY"]
+    required = ["DATABASE_URL", "GOOGLE_CLOUD_PROJECT"]
     missing = [v for v in required if not os.getenv(v)]
     if missing:
         raise EnvironmentError(f"환경변수 누락: {missing}")

@@ -18,7 +18,7 @@ from pathlib import Path
 import psycopg2
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from langchain_groq import ChatGroq
+from langchain_google_vertexai import ChatVertexAI
 from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
@@ -32,7 +32,8 @@ warnings.filterwarnings("ignore")
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GCP_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+GCP_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 MAX_ROWS_IN_CONTEXT = 10       # 이 이하면 텍스트로 반환
 OUTPUT_DIR = "query_outputs"    # CSV 저장 폴더
@@ -98,15 +99,15 @@ ALL_TABLES: list[str] = get_extracted_tables()
 
 
 # LLM singleton
-_llm: ChatGroq | None = None
-def get_llm() -> ChatGroq:
+_llm: ChatVertexAI | None = None
+def get_llm() -> ChatVertexAI:
     """LLM 객체를 싱글톤으로 반환한다."""
     global _llm
     if _llm is None:
-        _llm = ChatGroq(
-            api_key=GROQ_API_KEY,
-            model="llama-3.3-70b-versatile",
-            # model="openai/gpt-oss-120b",
+        _llm = ChatVertexAI(
+            model_name="gemini-2.5-flash",
+            project=GCP_PROJECT,
+            location=GCP_LOCATION,
             temperature=0,
         )
     return _llm
