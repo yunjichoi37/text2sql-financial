@@ -38,8 +38,9 @@ MAX_ROWS_IN_CONTEXT = 10       # 이 이하면 텍스트로 반환
 OUTPUT_DIR = "query_outputs"    # CSV 저장 폴더
 last_query_results = {"data": None}  # tool과 run_sql_agent가 공유하는 전역 상태
 
-USE_TABLE_FILTERING = False   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
+USE_TABLE_FILTERING = True   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
 
+# IMPORTANT: When filtering a TEXT column against a literal value, you MUST use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '='. Never use '=' for TEXT literal filters — the exact casing stored in the database may differ from the casing in the question.
 AGENT_PREFIX = """You are a SQL expert connected to a PostgreSQL database.
 
 Rules:
@@ -51,6 +52,7 @@ Rules:
 6. Report query results as facts. Do NOT add disclaimers or caveats.
 7. If the result shows only a preview, inform the user that the full data will be saved as a CSV file automatically.
 8. Always alias aggregate functions. (e.g. COUNT(*) AS count, SUM(amount) AS total)
+9. When filtering a TEXT column against a literal value, use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '=', since the exact casing stored in the database may differ from the casing in the question.
 
 Metadata Format:
 - Each table starts with [Table: table_name]
