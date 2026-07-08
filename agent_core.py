@@ -37,7 +37,6 @@ GCP_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 MAX_ROWS_IN_CONTEXT = 10       # 이 이하면 텍스트로 반환
 OUTPUT_DIR = "query_outputs"    # CSV 저장 폴더
-last_query_results = {"data": None}  # tool과 run_sql_agent가 공유하는 전역 상태
 
 USE_TABLE_FILTERING = True   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
 
@@ -113,53 +112,63 @@ def get_llm() -> ChatVertexAI:
     return _llm
 
 
-@tool
-def execute_sql_query(sql_query: str) -> str:
+def make_execute_sql_query_tool(results_holder: dict):
     """
-    PostgreSQL(Supabase) 데이터베이스에 SQL 쿼리를 실행하고 결과를 반환한다.
-    결과가 100행 이하면 텍스트로 반환하고, 100행 초과면 CSV 파일로 저장 후 경로와 미리보기를 반환한다.
-    (CSV는 답변 완성 후 자동 저장)
+    execute_sql_query 툴을 만들어 반환한다. results_holder는 이 호출(run_query 한 번) 전용으로
+    새로 만들어진 dict여야 한다 — LangGraph는 tool을 호출한 스레드와 다른 스레드에서 실행할 수 있어서
+    (threading.local 등 스레드 단위 저장으로는 값이 전달되지 않음이 확인됨), 매 run_query 호출마다
+    독립된 dict 객체를 클로저로 캡처해 공유 전역 상태 없이 결과를 전달한다.
     """
-    conn = None
-    cursor = None
-    try:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = True
-        cursor = conn.cursor() # cursor 객체 생성
-        cursor.execute(sql_query) # cursor가 DB에서 쿼리를 실행시킨다. 실행 후 cursor는 결과 집합의 첫 번째 행을 가리키게 된다.
 
-        if cursor.description is None:
-            return "실행 완료 (반환된 데이터 없음)"
+    @tool
+    def execute_sql_query(sql_query: str) -> str:
+        """
+        PostgreSQL(Supabase) 데이터베이스에 SQL 쿼리를 실행하고 결과를 반환한다.
+        결과가 100행 이하면 텍스트로 반환하고, 100행 초과면 CSV 파일로 저장 후 경로와 미리보기를 반환한다.
+        (CSV는 답변 완성 후 자동 저장)
+        """
+        conn = None
+        cursor = None
+        try:
+            conn = psycopg2.connect(DATABASE_URL)
+            conn.autocommit = True
+            cursor = conn.cursor() # cursor 객체 생성
+            cursor.execute(sql_query) # cursor가 DB에서 쿼리를 실행시킨다. 실행 후 cursor는 결과 집합의 첫 번째 행을 가리키게 된다.
 
-        columns = [col[0] for col in cursor.description] # cursor의 metadata인 description에서 컬럼 이름을 추출한다.
-        rows = cursor.fetchall() # fetch + all: 남은 데이터를 모두 가져온다.
-        results = [dict(zip(columns, row)) for row in rows]
+            if cursor.description is None:
+                return "실행 완료 (반환된 데이터 없음)"
 
-        from decimal import Decimal
-        results = [
-            {k: float(v) if isinstance(v, Decimal) else v for k, v in row.items()}
-            for row in results
-        ]
+            columns = [col[0] for col in cursor.description] # cursor의 metadata인 description에서 컬럼 이름을 추출한다.
+            rows = cursor.fetchall() # fetch + all: 남은 데이터를 모두 가져온다.
+            results = [dict(zip(columns, row)) for row in rows]
 
-        # 4. 행 수에 따라 분기
-        last_query_results["data"] = results
-        if len(results) <= MAX_ROWS_IN_CONTEXT:
-            return str(results) # 10행 이하면 llm에 전체 결과 전달
+            from decimal import Decimal
+            results = [
+                {k: float(v) if isinstance(v, Decimal) else v for k, v in row.items()}
+                for row in results
+            ]
 
-        preview = results[:5]
-        return (
-            f"쿼리 결과: 총 {len(results)}행 (데이터가 많아 상위 5행만 표시)\n"
-            f"{preview}"
-        )
+            # 4. 행 수에 따라 분기
+            results_holder["data"] = results
+            if len(results) <= MAX_ROWS_IN_CONTEXT:
+                return str(results) # 10행 이하면 llm에 전체 결과 전달
 
-    except Exception as e:
-        last_query_results["data"] = None
-        return f"SQL 실행 에러: {e}\n이 에러를 바탕으로 쿼리를 수정해서 다시 시도하세요."
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if conn is not None:
-            conn.close()
+            preview = results[:5]
+            return (
+                f"쿼리 결과: 총 {len(results)}행 (데이터가 많아 상위 5행만 표시)\n"
+                f"{preview}"
+            )
+
+        except Exception as e:
+            results_holder["data"] = None
+            return f"SQL 실행 에러: {e}\n이 에러를 바탕으로 쿼리를 수정해서 다시 시도하세요."
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+    return execute_sql_query
 
 
 def run_raw_sql(sql_query: str) -> pd.DataFrame:
@@ -172,10 +181,10 @@ def run_raw_sql(sql_query: str) -> pd.DataFrame:
         conn.close()
 
 
-def save_csv_if_needed() -> tuple[str | None, pd.DataFrame | None]:
-    """last_query_results에 데이터가 있으면 CSV로 저장하고 경로 반환"""
-    
-    data = last_query_results.get("data")
+def save_csv_if_needed(results_holder: dict) -> tuple[str | None, pd.DataFrame | None]:
+    """results_holder에 데이터가 있으면 CSV로 저장하고 경로 반환"""
+
+    data = results_holder.get("data")
     if not data:
         return None, None
 
@@ -189,14 +198,14 @@ def save_csv_if_needed() -> tuple[str | None, pd.DataFrame | None]:
         writer.writerows(data)
 
     df = pd.DataFrame(data)
-    last_query_results["data"] = None  # 다음 질문을 위해 초기화
+    results_holder["data"] = None  # 다음 질문을 위해 초기화
 
     return csv_path, df
 
 
-def build_agent_executor(dynamic_prefix: str):
+def build_agent_executor(dynamic_prefix: str, results_holder: dict):
     llm   = get_llm()
-    tools = [execute_sql_query]
+    tools = [make_execute_sql_query_tool(results_holder)]
 
     return create_agent(model=llm, tools=tools, system_prompt=dynamic_prefix)
 
@@ -301,7 +310,8 @@ def run_query(user_input: str) -> dict:
     print(table_meta)
     print(rel_meta)
 
-    agent_executor = build_agent_executor(dynamic_prefix) # agent 생성
+    results_holder = {"data": None}  # 이 run_query 호출 전용 결과 컨테이너
+    agent_executor = build_agent_executor(dynamic_prefix, results_holder) # agent 생성
 
     invoke_config = {}
 
@@ -316,8 +326,8 @@ def run_query(user_input: str) -> dict:
 
         intermediate_steps = _extract_intermediate_steps(messages)
         print(f"[STEPS] 총 tool 호출 횟수: {len(intermediate_steps)}")
-        
-        csv_path, df     = save_csv_if_needed()
+
+        csv_path, df     = save_csv_if_needed(results_holder)
         chart_config     = decide_chart(df, user_input) if df is not None else {"possible": False}
         print(f"[CHART] chart_config: {chart_config}")
 
@@ -333,7 +343,7 @@ def run_query(user_input: str) -> dict:
         }
 
     except Exception as e:
-        last_query_results["data"] = None   # 에러 시에도 버퍼 초기화
+        results_holder["data"] = None   # 에러 시에도 버퍼 초기화
         return {
             "answer":             "",
             "csv_path":           None,
