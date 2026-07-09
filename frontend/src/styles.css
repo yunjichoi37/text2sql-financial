@@ -272,6 +272,12 @@
   margin: 14px 0 6px;
 }
 
+.row-count {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
 .cell-results.stale {
   opacity: 0.5;
 }

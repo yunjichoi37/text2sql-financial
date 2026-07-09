@@ -179,6 +179,9 @@ export default function Cell({ cell, onUpdate, onDelete }) {
           <div className={busy ? 'cell-results stale' : 'cell-results'}>
             <div className="section-label">
               실행 결과
+              {Array.isArray(cell.ai_result) && (
+                <span className="row-count"> ({cell.ai_result.length}행)</span>
+              )}
               {busy && <span className="stale-note"> (재실행 중 - 아래는 이전 결과)</span>}
             </div>
             <ResultTable data={cell.ai_result} />
@@ -189,7 +192,12 @@ export default function Cell({ cell, onUpdate, onDelete }) {
                 <pre className="sql-block gold">
                   <code>{cell.gold_sql}</code>
                 </pre>
-                <div className="section-label">정답 결과</div>
+                <div className="section-label">
+                  정답 결과
+                  {Array.isArray(cell.gold_result) && (
+                    <span className="row-count"> ({cell.gold_result.length}행)</span>
+                  )}
+                </div>
                 <ResultTable data={cell.gold_result} />
               </div>
             )}

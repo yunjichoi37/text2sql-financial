@@ -134,11 +134,24 @@ function App() {
         }
       >
         <SideNavSection title="MENU">
+          {['test', 'query'].map((id) => {
+            const item = NAV_ITEMS.find((n) => n.id === id)
+            return (
+              <SideNavItem
+                key={item.id}
+                label={item.label}
+                icon={<IconIndicator color={item.color} d={item.iconPath} />}
+                isSelected={view === item.id}
+                onClick={() => setView(item.id)}
+              />
+            )
+          })}
+
           {tables.length > 0 && (
             <SideNavItem
               label="테이블"
               icon={<IconIndicator color={TABLE_ICON_COLOR} d={TABLE_ICON_PATH} />}
-              collapsible
+              collapsible={{ defaultIsCollapsed: true }}
             >
               {tables.map((t) => (
                 <SideNavItem
@@ -151,7 +164,7 @@ function App() {
             </SideNavItem>
           )}
 
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter((item) => item.id === 'history').map((item) => (
             <SideNavItem
               key={item.id}
               label={item.label}
