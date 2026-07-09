@@ -38,7 +38,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
     <div className="cell" id={`cell-${cell.id}`}>
       <div className="cell-header">
         <span className={`mode-tag mode-${cell.mode}`}>
-          {cell.mode === 'testset' ? '테스트셋' : '자유 질문'}
+          {cell.mode === 'testset' ? '테스트' : '직접 질문'}
         </span>
         {cell.difficulty && <span className="difficulty-tag">{cell.difficulty}</span>}
       </div>

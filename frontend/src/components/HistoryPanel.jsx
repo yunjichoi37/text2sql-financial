@@ -1,16 +1,19 @@
 import VerdictBadge from './VerdictBadge'
 
 export default function HistoryPanel({ cells, onSelect }) {
-  const testsetCells = cells.filter((c) => c.mode === 'testset')
+  const sorted = [...cells].sort(
+    (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+  )
 
-  if (testsetCells.length === 0) {
-    return <p className="muted">아직 실행한 테스트셋 질문이 없습니다.</p>
+  if (sorted.length === 0) {
+    return <p className="muted">아직 실행 기록이 없습니다.</p>
   }
 
   return (
     <table className="history-table">
       <thead>
         <tr>
+          <th>모드</th>
           <th>질문</th>
           <th>난이도</th>
           <th>결과</th>
@@ -18,12 +21,21 @@ export default function HistoryPanel({ cells, onSelect }) {
         </tr>
       </thead>
       <tbody>
-        {testsetCells.map((c) => (
+        {sorted.map((c) => (
           <tr key={c.id} className="history-row" onClick={() => onSelect(c.id)}>
-            <td>{c.question}</td>
-            <td>{c.difficulty}</td>
             <td>
-              <VerdictBadge verdict={c.match_verdict} />
+              <span className={`mode-tag mode-${c.mode}`}>
+                {c.mode === 'testset' ? '테스트' : '직접 질문'}
+              </span>
+            </td>
+            <td>{c.question}</td>
+            <td>{c.difficulty || '—'}</td>
+            <td>
+              {c.mode === 'testset' ? (
+                <VerdictBadge verdict={c.match_verdict} />
+              ) : (
+                <span className="muted">—</span>
+              )}
             </td>
             <td>{new Date(c.updated_at).toLocaleString()}</td>
           </tr>

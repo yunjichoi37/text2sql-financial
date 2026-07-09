@@ -2,6 +2,7 @@
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
+  --sidebar-bg: #fafafa;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
@@ -13,11 +14,16 @@
   --fail-text: #b3261e;
   --unknown-bg: #f0f0f0;
   --unknown-text: #666;
+  --row-hover: rgba(8, 6, 13, 0.03);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 16px/145% var(--sans);
+  font: 15px/145% var(--sans);
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
@@ -30,6 +36,7 @@
     --text: #9ca3af;
     --text-h: #f3f4f6;
     --bg: #16171d;
+    --sidebar-bg: #101116;
     --border: #2e303a;
     --code-bg: #1f2028;
     --accent: #c084fc;
@@ -41,6 +48,8 @@
     --fail-text: #f87171;
     --unknown-bg: rgba(255, 255, 255, 0.08);
     --unknown-text: #9ca3af;
+    --row-hover: rgba(255, 255, 255, 0.04);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -52,18 +61,109 @@ body {
   margin: 0;
 }
 
-#root {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 16px 64px;
+.shell {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
 }
 
-h1 {
+.sidebar {
+  flex: 0 0 232px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 12px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.sidebar-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-nav button {
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.sidebar-nav button:hover {
+  background: var(--row-hover);
+  color: var(--text-h);
+}
+
+.sidebar-nav button.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 48px 96px;
+}
+
+.main-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
   font-family: var(--sans);
   font-weight: 600;
   color: var(--text-h);
-  font-size: 28px;
-  margin: 24px 0;
+  font-size: 24px;
+  margin: 0 0 6px;
+}
+
+.page-desc {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.85;
 }
 
 .muted {
@@ -73,4 +173,29 @@ h1 {
 
 code {
   font-family: var(--mono);
+}
+
+@media (max-width: 720px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+  }
+
+  .main {
+    padding: 24px 20px 64px;
+  }
 }

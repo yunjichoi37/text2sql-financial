@@ -3,11 +3,29 @@ import { createCell, deleteCell, listCells, updateCell } from './api'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
 
+const NAV_ITEMS = [
+  {
+    id: 'test',
+    label: '테스트',
+    description: '테스트셋 질문을 골라 AI가 생성한 SQL과 정답 SQL을 비교합니다.',
+  },
+  {
+    id: 'query',
+    label: '직접 질문',
+    description: '자유롭게 질문을 입력해 SQL을 생성하고 바로 실행합니다.',
+  },
+  {
+    id: 'history',
+    label: '히스토리',
+    description: '지금까지 실행한 질문과 결과를 모아봅니다.',
+  },
+]
+
 function App() {
   const [cells, setCells] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [view, setView] = useState('notebook')
+  const [view, setView] = useState('test')
   const [scrollToId, setScrollToId] = useState(null)
 
   useEffect(() => {
@@ -18,7 +36,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (view === 'notebook' && scrollToId != null) {
+    if (view !== 'history' && scrollToId != null) {
       const el = document.getElementById(`cell-${scrollToId}`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       setScrollToId(null)
@@ -26,7 +44,8 @@ function App() {
   }, [view, scrollToId, cells])
 
   function handleHistorySelect(id) {
-    setView('notebook')
+    const target = cells.find((c) => c.id === id)
+    setView(target?.mode === 'freeform' ? 'query' : 'test')
     setScrollToId(id)
   }
 
@@ -45,40 +64,62 @@ function App() {
     setCells((prev) => prev.filter((c) => c.id !== id))
   }
 
+  const current = NAV_ITEMS.find((item) => item.id === view)
+
   return (
-    <div className="app">
-      <h1>Text2SQL Notebook</h1>
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <span className="sidebar-logo">T2S</span>
+          Text2SQL
+        </div>
+        <nav className="sidebar-nav">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={view === item.id ? 'active' : ''}
+              onClick={() => setView(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
 
-      <div className="tabs">
-        <button
-          type="button"
-          className={view === 'notebook' ? 'active' : ''}
-          onClick={() => setView('notebook')}
-        >
-          노트북
-        </button>
-        <button
-          type="button"
-          className={view === 'history' ? 'active' : ''}
-          onClick={() => setView('history')}
-        >
-          테스트셋 히스토리
-        </button>
-      </div>
+      <main className="main">
+        <div className="main-inner">
+          <header className="page-header">
+            <h1>{current.label}</h1>
+            <p className="page-desc">{current.description}</p>
+          </header>
 
-      {loading && <p className="muted">불러오는 중...</p>}
-      {error && <p className="cell-error">에러: {error}</p>}
-      {!loading && !error && view === 'notebook' && (
-        <CellList
-          cells={cells}
-          onCreate={handleCreate}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-        />
-      )}
-      {!loading && !error && view === 'history' && (
-        <HistoryPanel cells={cells} onSelect={handleHistorySelect} />
-      )}
+          {loading && <p className="muted">불러오는 중...</p>}
+          {error && <p className="cell-error">에러: {error}</p>}
+
+          {!loading && !error && view === 'test' && (
+            <CellList
+              mode="testset"
+              cells={cells.filter((c) => c.mode === 'testset')}
+              onCreate={handleCreate}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+            />
+          )}
+          {!loading && !error && view === 'query' && (
+            <CellList
+              mode="freeform"
+              cells={cells.filter((c) => c.mode === 'freeform')}
+              onCreate={handleCreate}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+            />
+          )}
+          {!loading && !error && view === 'history' && (
+            <HistoryPanel cells={cells} onSelect={handleHistorySelect} />
+          )}
+        </div>
+      </main>
     </div>
   )
 }

@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import TestsetPicker from './TestsetPicker'
 
-export default function NewCellComposer({ onCreate }) {
-  const [mode, setMode] = useState('freeform')
+export default function NewCellComposer({ mode, onCreate }) {
   const [question, setQuestion] = useState('')
   const [testsetQuestionId, setTestsetQuestionId] = useState(null)
   const [running, setRunning] = useState(false)
@@ -31,27 +30,6 @@ export default function NewCellComposer({ onCreate }) {
 
   return (
     <div className="cell new-cell">
-      <div className="mode-toggle">
-        <label>
-          <input
-            type="radio"
-            name="new-cell-mode"
-            checked={mode === 'freeform'}
-            onChange={() => setMode('freeform')}
-          />
-          자유 질문
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="new-cell-mode"
-            checked={mode === 'testset'}
-            onChange={() => setMode('testset')}
-          />
-          테스트셋에서 선택
-        </label>
-      </div>
-
       {mode === 'freeform' ? (
         <textarea
           rows={3}

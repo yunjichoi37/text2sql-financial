@@ -9,25 +9,34 @@
 
 .cell {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease;
+}
+
+.cell:hover {
+  border-color: var(--accent-border);
 }
 
 .cell-header {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .mode-tag {
+  display: inline-block;
   font-size: 12px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
   background: var(--accent-bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
+  white-space: nowrap;
 }
 
 .difficulty-tag {
@@ -40,24 +49,32 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--text-h);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 
 .cell-actions {
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .cell-actions button {
   font: inherit;
   font-size: 13px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: transparent;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
   color: var(--text);
   cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.cell-actions button:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  color: var(--text-h);
+  background: var(--accent-bg);
 }
 
 .cell-actions button:disabled {
@@ -68,44 +85,56 @@
 .cell textarea {
   width: 100%;
   font: inherit;
-  padding: 8px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text-h);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  resize: vertical;
+  transition: border-color 0.12s ease;
+}
+
+.cell textarea:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .cell-answer {
-  margin: 8px 0;
+  margin: 10px 0;
+  color: var(--text-h);
+  line-height: 1.55;
 }
 
 .cell-error {
   color: var(--fail-text);
   background: var(--fail-bg);
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin: 8px 0;
+  font-size: 14px;
 }
 
 .section-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text);
-  opacity: 0.7;
-  margin: 12px 0 4px;
+  opacity: 0.65;
+  margin: 14px 0 6px;
 }
 
 .sql-block {
   background: var(--code-bg);
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
   overflow-x: auto;
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .sql-block.gold {
@@ -113,26 +142,45 @@
 }
 
 .testset-block {
-  margin-top: 12px;
+  margin-top: 14px;
   border-top: 1px solid var(--border);
-  padding-top: 12px;
+  padding-top: 14px;
 }
 
 .result-table-wrap {
   overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 
 .result-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .result-table th,
 .result-table td {
-  border: 1px solid var(--border);
-  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
   text-align: left;
+  white-space: nowrap;
+}
+
+.result-table th {
+  background: var(--sidebar-bg);
+  color: var(--text-h);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.result-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.result-table tbody tr:hover {
+  background: var(--row-hover);
 }
 
 .badge {
@@ -142,6 +190,7 @@
   padding: 2px 10px;
   border-radius: 999px;
   margin-top: 8px;
+  white-space: nowrap;
 }
 
 .badge-pass {
@@ -161,13 +210,8 @@
 
 .new-cell {
   border-style: dashed;
-}
-
-.mode-toggle {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 8px;
-  font-size: 14px;
+  background: var(--sidebar-bg);
+  margin-bottom: 4px;
 }
 
 .new-cell textarea,
@@ -175,11 +219,19 @@
 .testset-picker select {
   width: 100%;
   font: inherit;
-  padding: 8px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--text-h);
+  transition: border-color 0.12s ease;
+}
+
+.new-cell textarea:focus,
+.testset-picker input:focus,
+.testset-picker select:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .testset-picker {
@@ -188,43 +240,30 @@
   gap: 8px;
 }
 
+.testset-picker select option {
+  padding: 4px 6px;
+}
+
 .new-cell button {
-  margin-top: 8px;
-  padding: 8px 16px;
-  border: 1px solid var(--accent-border);
-  border-radius: 6px;
-  background: var(--accent-bg);
-  color: var(--accent);
+  margin-top: 12px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.new-cell button:hover:not(:disabled) {
+  opacity: 0.88;
 }
 
 .new-cell button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-}
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.tabs button {
-  font: inherit;
-  padding: 8px 4px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.tabs button.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
 }
 
 .history-table {
@@ -232,18 +271,39 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
 .history-table th,
 .history-table td {
   border-bottom: 1px solid var(--border);
-  padding: 8px;
+  padding: 10px 12px;
+}
+
+.history-table th {
+  background: var(--sidebar-bg);
+  color: var(--text-h);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table .badge {
+  margin-top: 0;
 }
 
 .history-row {
   cursor: pointer;
+  transition: background 0.12s ease;
 }
 
 .history-row:hover {
-  background: var(--accent-bg);
+  background: var(--row-hover);
 }
