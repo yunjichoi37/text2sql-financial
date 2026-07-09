@@ -175,6 +175,13 @@ body {
   margin: 0 0 6px;
 }
 
+.row-count-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+  opacity: 0.6;
+}
+
 .page-desc {
   margin: 0;
   font-size: 14px;

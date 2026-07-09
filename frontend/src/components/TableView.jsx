@@ -4,7 +4,7 @@ import { getTableRows } from '../api'
 
 const PAGE_SIZE = 20
 
-export default function TableView({ table }) {
+export default function TableView({ table, onTotalChange }) {
   const [page, setPage] = useState(1)
   const [rows, setRows] = useState([])
   const [total, setTotal] = useState(0)
@@ -18,10 +18,11 @@ export default function TableView({ table }) {
       .then((data) => {
         setRows(data.rows)
         setTotal(data.total)
+        onTotalChange?.(data.total)
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [table.name, page])
+  }, [table.name, page, onTotalChange])
 
   const paginationPlugin = useTablePagination({
     page,

@@ -59,6 +59,7 @@ function App() {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [tables, setTables] = useState([])
   const [selectedTableName, setSelectedTableName] = useState(null)
+  const [selectedTableRowCount, setSelectedTableRowCount] = useState(null)
 
   useEffect(() => {
     listCells()
@@ -120,6 +121,7 @@ function App() {
   function selectTable(name) {
     setView('tables')
     setSelectedTableName(name)
+    setSelectedTableRowCount(null)
   }
 
   return (
@@ -196,7 +198,12 @@ function App() {
                 <span className="crumb-current">{current.label}</span>
               )}
             </div>
-            <h1>{view === 'tables' ? selectedTableName || '테이블' : current.label}</h1>
+            <h1>
+              {view === 'tables' ? selectedTableName || '테이블' : current.label}
+              {view === 'tables' && selectedTableRowCount != null && (
+                <span className="row-count-label"> {selectedTableRowCount} rows</span>
+              )}
+            </h1>
             <p className="page-desc">
               {view === 'tables'
                 ? selectedTable?.summary || '왼쪽 사이드바에서 테이블을 선택하면 데이터를 확인할 수 있습니다.'
@@ -229,7 +236,11 @@ function App() {
             <HistoryPanel cells={cells} onSelect={handleHistorySelect} />
           )}
           {view === 'tables' && selectedTable && (
-            <TableView key={selectedTable.name} table={selectedTable} />
+            <TableView
+              key={selectedTable.name}
+              table={selectedTable}
+              onTotalChange={setSelectedTableRowCount}
+            />
           )}
         </div>
       </main>
