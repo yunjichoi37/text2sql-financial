@@ -63,7 +63,11 @@ export default function Cell({ cell, onUpdate, onDelete }) {
               label={showInfo ? '에이전트 정보 닫기' : '에이전트 정보 보기'}
               onClick={(e) => {
                 e.stopPropagation()
-                setShowInfo((v) => !v)
+                setShowInfo((v) => {
+                  const next = !v
+                  if (next && collapsed) setCollapsed(false)
+                  return next
+                })
               }}
             />
             <Button
