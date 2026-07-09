@@ -130,8 +130,11 @@ function App() {
         className="sidebar"
         header={
           <div className="sidebar-brand">
-            <span className="sidebar-logo">T2S</span>
-            Text2SQL
+            <img src="/birdSQL.png" alt="" className="sidebar-logo" />
+            <div className="sidebar-brand-text">
+              <div className="sidebar-brand-title">Bird Bench</div>
+              <div className="sidebar-brand-subtitle">SQL Test Playground</div>
+            </div>
           </div>
         }
       >
