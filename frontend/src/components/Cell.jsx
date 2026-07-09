@@ -179,7 +179,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
           <div className={busy ? 'cell-results stale' : 'cell-results'}>
             <div className="section-label">
               실행 결과
-              {busy && <span className="stale-note"> (재실행 중 — 아래는 이전 결과)</span>}
+              {busy && <span className="stale-note"> (재실행 중 - 아래는 이전 결과)</span>}
             </div>
             <ResultTable data={cell.ai_result} />
 

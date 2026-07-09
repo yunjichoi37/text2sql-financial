@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
-import { createCell, deleteCell, listCells, updateCell } from './api'
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
+import { createCell, deleteCell, listCells, listTables, updateCell } from './api'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
+import TableView from './components/TableView'
 
 function IconIndicator({ color, d }) {
   return (
@@ -45,6 +47,9 @@ const NAV_ITEMS = [
   },
 ]
 
+const TABLE_ICON_PATH = 'M4 5h16v14H4z M4 10h16 M4 15h16 M10 5v14'
+const TABLE_ICON_COLOR = '#d97706'
+
 function App() {
   const [cells, setCells] = useState([])
   const [loading, setLoading] = useState(true)
@@ -52,12 +57,20 @@ function App() {
   const [view, setView] = useState('test')
   const [scrollToId, setScrollToId] = useState(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [tables, setTables] = useState([])
+  const [selectedTableName, setSelectedTableName] = useState(null)
 
   useEffect(() => {
     listCells()
       .then(setCells)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    listTables()
+      .then(setTables)
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -102,29 +115,53 @@ function App() {
   }
 
   const current = NAV_ITEMS.find((item) => item.id === view)
+  const selectedTable = tables.find((t) => t.name === selectedTableName)
+
+  function selectTable(name) {
+    setView('tables')
+    setSelectedTableName(name)
+  }
 
   return (
     <div className="shell">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <span className="sidebar-logo">T2S</span>
-          Text2SQL
-        </div>
-        <div className="sidebar-section-label">MENU</div>
-        <nav className="sidebar-nav">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={view === item.id ? 'active' : ''}
-              onClick={() => setView(item.id)}
+      <SideNav
+        className="sidebar"
+        header={
+          <div className="sidebar-brand">
+            <span className="sidebar-logo">T2S</span>
+            Text2SQL
+          </div>
+        }
+      >
+        <SideNavSection title="MENU">
+          {tables.length > 0 && (
+            <SideNavItem
+              label="테이블"
+              icon={<IconIndicator color={TABLE_ICON_COLOR} d={TABLE_ICON_PATH} />}
+              collapsible
             >
-              <IconIndicator color={item.color} d={item.iconPath} />
-              {item.label}
-            </button>
+              {tables.map((t) => (
+                <SideNavItem
+                  key={t.name}
+                  label={t.name}
+                  isSelected={view === 'tables' && selectedTableName === t.name}
+                  onClick={() => selectTable(t.name)}
+                />
+              ))}
+            </SideNavItem>
+          )}
+
+          {NAV_ITEMS.map((item) => (
+            <SideNavItem
+              key={item.id}
+              label={item.label}
+              icon={<IconIndicator color={item.color} d={item.iconPath} />}
+              isSelected={view === item.id}
+              onClick={() => setView(item.id)}
+            />
           ))}
-        </nav>
-      </aside>
+        </SideNavSection>
+      </SideNav>
 
       <main className="main">
         <div className="main-inner">
@@ -132,10 +169,26 @@ function App() {
             <div className="breadcrumb">
               <span>Home</span>
               <span>/</span>
-              <span className="crumb-current">{current.label}</span>
+              {view === 'tables' ? (
+                <>
+                  <span>테이블</span>
+                  {selectedTableName && (
+                    <>
+                      <span>/</span>
+                      <span className="crumb-current">{selectedTableName}</span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <span className="crumb-current">{current.label}</span>
+              )}
             </div>
-            <h1>{current.label}</h1>
-            <p className="page-desc">{current.description}</p>
+            <h1>{view === 'tables' ? selectedTableName || '테이블' : current.label}</h1>
+            <p className="page-desc">
+              {view === 'tables'
+                ? selectedTable?.summary || '왼쪽 사이드바에서 테이블을 선택하면 데이터를 확인할 수 있습니다.'
+                : current.description}
+            </p>
           </header>
 
           {loading && <p className="muted">불러오는 중...</p>}
@@ -161,6 +214,9 @@ function App() {
           )}
           {!loading && !error && view === 'history' && (
             <HistoryPanel cells={cells} onSelect={handleHistorySelect} />
+          )}
+          {view === 'tables' && selectedTable && (
+            <TableView key={selectedTable.name} table={selectedTable} />
           )}
         </div>
       </main>

@@ -38,3 +38,11 @@ export function deleteCell(id) {
 export function listTestset() {
   return fetch('/api/testset').then(handle)
 }
+
+export function listTables() {
+  return fetch('/api/tables').then(handle)
+}
+
+export function getTableRows(tableName, page, pageSize) {
+  return fetch(`/api/tables/${tableName}/rows?page=${page}&page_size=${pageSize}`).then(handle)
+}
