@@ -198,6 +198,8 @@
 
 .result-table-wrap {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 360px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
