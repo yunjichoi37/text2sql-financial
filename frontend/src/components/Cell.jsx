@@ -44,7 +44,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
   return (
     <div className={showInfo ? 'cell with-info-panel' : 'cell'} id={`cell-${cell.id}`}>
       <div className="cell-top">
-        <div className="cell-header">
+        <div className="cell-header" onClick={() => setCollapsed((c) => !c)}>
           <span className={`mode-tag mode-${cell.mode}`}>
             {cell.mode === 'testset' ? '테스트' : '직접 질문'}
           </span>
@@ -61,7 +61,10 @@ export default function Cell({ cell, onUpdate, onDelete }) {
               isIconOnly
               icon={<Icon icon="info" />}
               label={showInfo ? '에이전트 정보 닫기' : '에이전트 정보 보기'}
-              onClick={() => setShowInfo((v) => !v)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowInfo((v) => !v)
+              }}
             />
             <Button
               className={collapsed ? 'collapse-toggle' : 'collapse-toggle expanded'}
@@ -70,7 +73,11 @@ export default function Cell({ cell, onUpdate, onDelete }) {
               isIconOnly
               icon={<Icon icon="chevronDown" />}
               label={collapsed ? '펼치기' : '접기'}
-              onClick={() => setCollapsed((c) => !c)}
+              aria-expanded={!collapsed}
+              onClick={(e) => {
+                e.stopPropagation()
+                setCollapsed((c) => !c)
+              }}
             />
           </div>
         </div>
