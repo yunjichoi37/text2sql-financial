@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from '@astryxdesign/core/Button'
 import ResultTable from './ResultTable'
 import VerdictBadge from './VerdictBadge'
 
@@ -58,42 +59,65 @@ export default function Cell({ cell, onUpdate, onDelete }) {
       <div className="cell-actions">
         {editing ? (
           <>
-            <button
-              type="button"
-              className="primary"
-              disabled={busy || !draft.trim()}
+            <Button
+              variant="primary"
+              size="sm"
+              label="저장 후 재실행"
+              isDisabled={busy || !draft.trim()}
               onClick={() => runUpdate({ question: draft })}
-            >
-              저장 후 재실행
-            </button>
-            <button type="button" disabled={busy} onClick={() => setEditing(false)}>
-              취소
-            </button>
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              label="취소"
+              isDisabled={busy}
+              onClick={() => setEditing(false)}
+            />
           </>
         ) : (
           <>
             {isFreeform && (
-              <button type="button" disabled={busy} onClick={() => setEditing(true)}>
-                수정
-              </button>
+              <Button
+                variant="secondary"
+                size="sm"
+                label="수정"
+                isDisabled={busy}
+                onClick={() => setEditing(true)}
+              />
             )}
-            <button type="button" className="primary" disabled={busy} onClick={() => runUpdate({})}>
-              {busy ? '실행 중...' : '다시 실행'}
-            </button>
+            <Button
+              variant="primary"
+              size="sm"
+              label={busy ? '실행 중...' : '다시 실행'}
+              isDisabled={busy}
+              onClick={() => runUpdate({})}
+            />
             {confirmingDelete ? (
               <>
                 <span className="delete-confirm-label">정말 삭제할까요?</span>
-                <button type="button" disabled={busy} onClick={handleDelete} className="danger">
-                  {busy ? '삭제 중...' : '삭제 확인'}
-                </button>
-                <button type="button" disabled={busy} onClick={() => setConfirmingDelete(false)}>
-                  취소
-                </button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  label={busy ? '삭제 중...' : '삭제 확인'}
+                  isDisabled={busy}
+                  onClick={handleDelete}
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  label="취소"
+                  isDisabled={busy}
+                  onClick={() => setConfirmingDelete(false)}
+                />
               </>
             ) : (
-              <button type="button" disabled={busy} onClick={() => setConfirmingDelete(true)}>
-                삭제
-              </button>
+              <Button
+                variant="secondary"
+                size="sm"
+                label="삭제"
+                isDisabled={busy}
+                onClick={() => setConfirmingDelete(true)}
+              />
             )}
           </>
         )}

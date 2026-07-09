@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@astryxdesign/core": "^0.1.4",
+    "@astryxdesign/theme-neutral": "^0.1.4",
+    "@stylexjs/stylex": "^0.18.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

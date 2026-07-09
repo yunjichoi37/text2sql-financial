@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from '@astryxdesign/core/Button'
 import TestsetPicker from './TestsetPicker'
 
 export default function NewCellComposer({ mode, onCreate }) {
@@ -43,9 +44,13 @@ export default function NewCellComposer({ mode, onCreate }) {
 
       {error && <div className="cell-error">에러: {error}</div>}
 
-      <button type="button" className="run-button" disabled={!canRun || running} onClick={handleRun}>
-        {running ? '실행 중...' : '실행'}
-      </button>
+      <Button
+        variant="primary"
+        label={running ? '실행 중...' : '실행'}
+        isDisabled={!canRun || running}
+        onClick={handleRun}
+        className="run-button"
+      />
     </div>
   )
 }

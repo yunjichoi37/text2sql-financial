@@ -1,12 +1,32 @@
 import { useEffect, useState } from 'react'
+import { Button } from '@astryxdesign/core/Button'
 import { listTestset } from '../api'
 
 const DIFFICULTY_ORDER = ['simple', 'moderate', 'challenging']
+const DIFFICULTY_DOT_COLOR = {
+  simple: 'var(--pass-text)',
+  moderate: '#c2410c',
+  challenging: 'var(--fail-text)',
+}
+
+function DifficultyDot({ difficulty }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: 7,
+        height: 7,
+        borderRadius: '50%',
+        background: DIFFICULTY_DOT_COLOR[difficulty],
+      }}
+    />
+  )
+}
 
 export default function TestsetPicker({ value, onChange }) {
   const [questions, setQuestions] = useState([])
   const [filter, setFilter] = useState('')
-  const [difficultyFilter, setDifficultyFilter] = useState(null)
+  const [difficultyFilter, setDifficultyFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,7 +42,7 @@ export default function TestsetPicker({ value, onChange }) {
   const filtered = questions.filter(
     (q) =>
       q.question.toLowerCase().includes(filter.toLowerCase()) &&
-      (difficultyFilter == null || q.difficulty === difficultyFilter)
+      (difficultyFilter === 'all' || q.difficulty === difficultyFilter)
   )
 
   return (
@@ -40,27 +60,22 @@ export default function TestsetPicker({ value, onChange }) {
         />
       </div>
       {!loading && availableDifficulties.length > 0 && (
-        <div className="difficulty-filter">
-          <button
-            type="button"
-            className={difficultyFilter == null ? 'difficulty-filter-chip active' : 'difficulty-filter-chip'}
-            onClick={() => setDifficultyFilter(null)}
-          >
-            전체
-          </button>
+        <div className="difficulty-filter" role="group" aria-label="난이도 필터">
+          <Button
+            size="sm"
+            variant={difficultyFilter === 'all' ? 'primary' : 'secondary'}
+            label="전체"
+            onClick={() => setDifficultyFilter('all')}
+          />
           {availableDifficulties.map((d) => (
-            <button
+            <Button
               key={d}
-              type="button"
-              className={
-                difficultyFilter === d
-                  ? `difficulty-filter-chip difficulty-${d} active`
-                  : `difficulty-filter-chip difficulty-${d}`
-              }
-              onClick={() => setDifficultyFilter(difficultyFilter === d ? null : d)}
-            >
-              {d}
-            </button>
+              size="sm"
+              variant={difficultyFilter === d ? 'primary' : 'secondary'}
+              label={d}
+              icon={<DifficultyDot difficulty={d} />}
+              onClick={() => setDifficultyFilter(difficultyFilter === d ? 'all' : d)}
+            />
           ))}
         </div>
       )}

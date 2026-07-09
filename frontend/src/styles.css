@@ -64,54 +64,9 @@
 
 .cell-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-}
-
-.cell-actions button {
-  font: inherit;
-  font-size: 13px;
-  padding: 5px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-}
-
-.cell-actions button:hover:not(:disabled) {
-  border-color: #cbd1db;
-  color: var(--text-h);
-  background: var(--row-hover);
-}
-
-.cell-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.cell-actions button.primary {
-  background: var(--primary-bg);
-  border-color: var(--primary-bg);
-  color: var(--primary-fg);
-}
-
-.cell-actions button.primary:hover:not(:disabled) {
-  background: var(--primary-bg-hover);
-  border-color: var(--primary-bg-hover);
-  color: var(--primary-fg);
-}
-
-.cell-actions button.danger {
-  border-color: var(--fail-text);
-  color: var(--fail-text);
-}
-
-.cell-actions button.danger:hover:not(:disabled) {
-  background: var(--fail-bg);
-  border-color: var(--fail-text);
-  color: var(--fail-text);
 }
 
 .delete-confirm-label {
@@ -315,6 +270,12 @@
   outline: none;
 }
 
+.difficulty-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .question-list {
   display: flex;
   flex-direction: column;
@@ -375,52 +336,6 @@
   color: var(--fail-text);
 }
 
-.difficulty-filter {
-  display: flex;
-  gap: 6px;
-}
-
-.difficulty-filter-chip {
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-}
-
-.difficulty-filter-chip:hover {
-  background: var(--row-hover);
-}
-
-.difficulty-filter-chip.active {
-  background: var(--text-h);
-  border-color: var(--text-h);
-  color: var(--bg);
-}
-
-.difficulty-filter-chip.difficulty-simple.active {
-  background: var(--pass-text);
-  border-color: var(--pass-text);
-  color: #fff;
-}
-
-.difficulty-filter-chip.difficulty-moderate.active {
-  background: #c2410c;
-  border-color: #c2410c;
-  color: #fff;
-}
-
-.difficulty-filter-chip.difficulty-challenging.active {
-  background: var(--fail-text);
-  border-color: var(--fail-text);
-  color: #fff;
-}
-
 .question-item .question-text {
   font-size: 14px;
   line-height: 1.45;
@@ -430,24 +345,6 @@
 
 .run-button {
   margin-top: 12px;
-  padding: 9px 18px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--primary-bg);
-  color: var(--primary-fg);
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-
-.run-button:hover:not(:disabled) {
-  background: var(--primary-bg-hover);
-}
-
-.run-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .history-table {
