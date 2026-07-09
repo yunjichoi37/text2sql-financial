@@ -41,5 +41,7 @@ class CellOut(BaseModel):
     gold_result: list[dict] | None = None
     match_verdict: bool | None = None
     error: str | None = None
+    relevant_tables: list[str] | None = None
+    intermediate_steps: list[dict] | None = None
     created_at: datetime
     updated_at: datetime

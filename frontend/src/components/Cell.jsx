@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
+import AgentInfoPanel from './AgentInfoPanel'
 import ResultTable from './ResultTable'
 import VerdictBadge from './VerdictBadge'
 
@@ -11,6 +12,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
   const [busy, setBusy] = useState(false)
   const [localError, setLocalError] = useState(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
 
   const isFreeform = cell.mode === 'freeform'
 
@@ -40,104 +42,115 @@ export default function Cell({ cell, onUpdate, onDelete }) {
   }
 
   return (
-    <div className="cell" id={`cell-${cell.id}`}>
-      <div className="cell-header">
-        <span className={`mode-tag mode-${cell.mode}`}>
-          {cell.mode === 'testset' ? '테스트' : '직접 질문'}
-        </span>
-        {cell.difficulty && <span className="difficulty-tag">{cell.difficulty}</span>}
-        {typeof cell._durationMs === 'number' && (
-          <span className="duration-tag">{(cell._durationMs / 1000).toFixed(1)}초</span>
-        )}
-        <div className="cell-header-trailing">
-          {cell.mode === 'testset' && <VerdictBadge verdict={cell.match_verdict} />}
-          <Button
-            className={collapsed ? 'collapse-toggle' : 'collapse-toggle expanded'}
-            variant="ghost"
-            size="sm"
-            isIconOnly
-            icon={<Icon icon="chevronDown" />}
-            label={collapsed ? '펼치기' : '접기'}
-            onClick={() => setCollapsed((c) => !c)}
-          />
+    <div className={showInfo ? 'cell with-info-panel' : 'cell'} id={`cell-${cell.id}`}>
+      <div className="cell-top">
+        <div className="cell-header">
+          <span className={`mode-tag mode-${cell.mode}`}>
+            {cell.mode === 'testset' ? '테스트' : '직접 질문'}
+          </span>
+          {cell.difficulty && <span className="difficulty-tag">{cell.difficulty}</span>}
+          {typeof cell._durationMs === 'number' && (
+            <span className="duration-tag">{(cell._durationMs / 1000).toFixed(1)}초</span>
+          )}
+          <div className="cell-header-trailing">
+            {cell.mode === 'testset' && <VerdictBadge verdict={cell.match_verdict} />}
+            <Button
+              className={showInfo ? 'info-toggle active' : 'info-toggle'}
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              icon={<Icon icon="info" />}
+              label={showInfo ? '에이전트 정보 닫기' : '에이전트 정보 보기'}
+              onClick={() => setShowInfo((v) => !v)}
+            />
+            <Button
+              className={collapsed ? 'collapse-toggle' : 'collapse-toggle expanded'}
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              icon={<Icon icon="chevronDown" />}
+              label={collapsed ? '펼치기' : '접기'}
+              onClick={() => setCollapsed((c) => !c)}
+            />
+          </div>
         </div>
-      </div>
 
-      {editing ? (
-        <textarea
-          rows={2}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-        />
-      ) : (
-        <div className="cell-question">{cell.question}</div>
-      )}
-
-      <div className="cell-actions">
         {editing ? (
-          <>
-            <Button
-              variant="primary"
-              size="sm"
-              label="저장 후 재실행"
-              isDisabled={busy || !draft.trim()}
-              onClick={() => runUpdate({ question: draft })}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              label="취소"
-              isDisabled={busy}
-              onClick={() => setEditing(false)}
-            />
-          </>
+          <textarea
+            rows={2}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+          />
         ) : (
-          <>
-            {isFreeform && (
+          <div className="cell-question">{cell.question}</div>
+        )}
+
+        <div className="cell-actions">
+          {editing ? (
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                label="저장 후 재실행"
+                isDisabled={busy || !draft.trim()}
+                onClick={() => runUpdate({ question: draft })}
+              />
               <Button
                 variant="secondary"
                 size="sm"
-                label="수정"
+                label="취소"
                 isDisabled={busy}
-                onClick={() => setEditing(true)}
+                onClick={() => setEditing(false)}
               />
-            )}
-            <Button
-              variant="primary"
-              size="sm"
-              label={busy ? '실행 중...' : '다시 실행'}
-              isDisabled={busy}
-              onClick={() => runUpdate({})}
-            />
-            {confirmingDelete ? (
-              <>
-                <span className="delete-confirm-label">정말 삭제할까요?</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  label={busy ? '삭제 중...' : '삭제 확인'}
-                  isDisabled={busy}
-                  onClick={handleDelete}
-                />
+            </>
+          ) : (
+            <>
+              {isFreeform && (
                 <Button
                   variant="secondary"
                   size="sm"
-                  label="취소"
+                  label="수정"
                   isDisabled={busy}
-                  onClick={() => setConfirmingDelete(false)}
+                  onClick={() => setEditing(true)}
                 />
-              </>
-            ) : (
+              )}
               <Button
-                variant="secondary"
+                variant="primary"
                 size="sm"
-                label="삭제"
+                label={busy ? '실행 중...' : '다시 실행'}
                 isDisabled={busy}
-                onClick={() => setConfirmingDelete(true)}
+                onClick={() => runUpdate({})}
               />
-            )}
-          </>
-        )}
+              {confirmingDelete ? (
+                <>
+                  <span className="delete-confirm-label">정말 삭제할까요?</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    label={busy ? '삭제 중...' : '삭제 확인'}
+                    isDisabled={busy}
+                    onClick={handleDelete}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    label="취소"
+                    isDisabled={busy}
+                    onClick={() => setConfirmingDelete(false)}
+                  />
+                </>
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  label="삭제"
+                  isDisabled={busy}
+                  onClick={() => setConfirmingDelete(true)}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className={collapsed ? 'cell-collapsible' : 'cell-collapsible expanded'}>
@@ -176,6 +189,13 @@ export default function Cell({ cell, onUpdate, onDelete }) {
           </div>
         </div>
       </div>
+
+      {showInfo && (
+        <AgentInfoPanel
+          relevantTables={cell.relevant_tables}
+          intermediateSteps={cell.intermediate_steps}
+        />
+      )}
     </div>
   )
 }

@@ -32,6 +32,12 @@ CREATE_INDEX_SQL = """
 CREATE INDEX IF NOT EXISTS idx_cells_mode ON cells (mode);
 """
 
+MIGRATE_ADD_AGENT_INFO_COLUMNS_SQL = """
+ALTER TABLE cells
+    ADD COLUMN IF NOT EXISTS relevant_tables JSONB,
+    ADD COLUMN IF NOT EXISTS intermediate_steps JSONB;
+"""
+
 
 def main() -> None:
     conn = psycopg2.connect(DATABASE_URL)
@@ -40,6 +46,7 @@ def main() -> None:
         cur = conn.cursor()
         cur.execute(CREATE_TABLE_SQL)
         cur.execute(CREATE_INDEX_SQL)
+        cur.execute(MIGRATE_ADD_AGENT_INFO_COLUMNS_SQL)
         cur.close()
         print("cells 테이블 준비 완료")
     finally:

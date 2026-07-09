@@ -27,6 +27,8 @@ def _execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
     """agent_core.run_query 실행 + (testset이면) 정답 SQL 실행/비교까지 수행하고
     cells 테이블에 반영할 필드 dict를 반환한다."""
     result = run_query(question)
+    relevant_tables = result.get("relevant_tables")
+    intermediate_steps = result.get("intermediate_steps")
 
     if result.get("error"):
         return {
@@ -36,9 +38,11 @@ def _execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
             "gold_result": None,
             "match_verdict": None,
             "error": result["error"],
+            "relevant_tables": relevant_tables,
+            "intermediate_steps": intermediate_steps,
         }
 
-    ai_sql = _extract_last_sql(result.get("intermediate_steps", []))
+    ai_sql = _extract_last_sql(intermediate_steps or [])
     ai_result = to_jsonable_records(result.get("df"))
     ai_answer = result.get("answer")
 
@@ -60,6 +64,8 @@ def _execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
         "gold_result": gold_result,
         "match_verdict": match_verdict,
         "error": error,
+        "relevant_tables": relevant_tables,
+        "intermediate_steps": intermediate_steps,
     }
 
 
@@ -68,7 +74,8 @@ def _json_param(value):
 
 
 def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, gold_sql,
-                  ai_sql, ai_answer, ai_result, gold_result, match_verdict, error) -> dict:
+                  ai_sql, ai_answer, ai_result, gold_result, match_verdict, error,
+                  relevant_tables, intermediate_steps) -> dict:
     conn = get_conn()
     try:
         cur = dict_cursor(conn)
@@ -76,10 +83,10 @@ def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, g
             """
             INSERT INTO cells (mode, question, testset_question_id, evidence, difficulty,
                                 gold_sql, ai_sql, ai_answer, ai_result, gold_result,
-                                match_verdict, error)
+                                match_verdict, error, relevant_tables, intermediate_steps)
             VALUES (%(mode)s, %(question)s, %(testset_question_id)s, %(evidence)s, %(difficulty)s,
                     %(gold_sql)s, %(ai_sql)s, %(ai_answer)s, %(ai_result)s, %(gold_result)s,
-                    %(match_verdict)s, %(error)s)
+                    %(match_verdict)s, %(error)s, %(relevant_tables)s, %(intermediate_steps)s)
             RETURNING *;
             """,
             {
@@ -95,6 +102,8 @@ def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, g
                 "gold_result": _json_param(gold_result),
                 "match_verdict": match_verdict,
                 "error": error,
+                "relevant_tables": _json_param(relevant_tables),
+                "intermediate_steps": _json_param(intermediate_steps),
             },
         )
         row = cur.fetchone()
@@ -132,7 +141,7 @@ def _get_cell(cell_id: int) -> dict | None:
 
 
 def _update_cell(cell_id: int, *, question, ai_sql, ai_answer, ai_result, gold_result,
-                  match_verdict, error) -> dict:
+                  match_verdict, error, relevant_tables, intermediate_steps) -> dict:
     conn = get_conn()
     try:
         cur = dict_cursor(conn)
@@ -141,7 +150,9 @@ def _update_cell(cell_id: int, *, question, ai_sql, ai_answer, ai_result, gold_r
             UPDATE cells
             SET question = %(question)s, ai_sql = %(ai_sql)s, ai_answer = %(ai_answer)s,
                 ai_result = %(ai_result)s, gold_result = %(gold_result)s,
-                match_verdict = %(match_verdict)s, error = %(error)s, updated_at = now()
+                match_verdict = %(match_verdict)s, error = %(error)s,
+                relevant_tables = %(relevant_tables)s, intermediate_steps = %(intermediate_steps)s,
+                updated_at = now()
             WHERE id = %(id)s
             RETURNING *;
             """,
@@ -154,6 +165,8 @@ def _update_cell(cell_id: int, *, question, ai_sql, ai_answer, ai_result, gold_r
                 "gold_result": _json_param(gold_result),
                 "match_verdict": match_verdict,
                 "error": error,
+                "relevant_tables": _json_param(relevant_tables),
+                "intermediate_steps": _json_param(intermediate_steps),
             },
         )
         row = cur.fetchone()
