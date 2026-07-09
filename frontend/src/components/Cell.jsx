@@ -60,6 +60,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
           <>
             <button
               type="button"
+              className="primary"
               disabled={busy || !draft.trim()}
               onClick={() => runUpdate({ question: draft })}
             >
@@ -76,7 +77,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
                 수정
               </button>
             )}
-            <button type="button" disabled={busy} onClick={() => runUpdate({})}>
+            <button type="button" className="primary" disabled={busy} onClick={() => runUpdate({})}>
               {busy ? '실행 중...' : '다시 실행'}
             </button>
             {confirmingDelete ? (

@@ -18,12 +18,18 @@ export default function TestsetPicker({ value, onChange }) {
 
   return (
     <div className="testset-picker">
-      <input
-        type="text"
-        placeholder="질문 검색..."
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
+      <div className="search-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+        <input
+          type="text"
+          placeholder="질문 검색..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      </div>
       {loading ? (
         <p className="muted">테스트셋 불러오는 중...</p>
       ) : (

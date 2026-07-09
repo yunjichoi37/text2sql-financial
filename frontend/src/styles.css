@@ -17,7 +17,7 @@
 }
 
 .cell:hover {
-  border-color: var(--accent-border);
+  border-color: #cbd1db;
 }
 
 .cell-header {
@@ -33,10 +33,19 @@
   font-weight: 600;
   padding: 2px 9px;
   border-radius: 999px;
-  background: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
   white-space: nowrap;
+}
+
+.mode-tag.mode-testset {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.mode-tag.mode-freeform {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
 }
 
 .difficulty-tag {
@@ -72,14 +81,26 @@
 }
 
 .cell-actions button:hover:not(:disabled) {
-  border-color: var(--accent-border);
+  border-color: #cbd1db;
   color: var(--text-h);
-  background: var(--accent-bg);
+  background: var(--row-hover);
 }
 
 .cell-actions button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.cell-actions button.primary {
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+  color: var(--primary-fg);
+}
+
+.cell-actions button.primary:hover:not(:disabled) {
+  background: var(--primary-bg-hover);
+  border-color: var(--primary-bg-hover);
+  color: var(--primary-fg);
 }
 
 .cell-actions button.danger {
@@ -196,9 +217,10 @@
 }
 
 .result-table th {
-  background: var(--sidebar-bg);
+  background: var(--bg);
   color: var(--text-h);
   font-weight: 600;
+  border-bottom-width: 2px;
   position: sticky;
   top: 0;
 }
@@ -214,26 +236,22 @@
 .badge {
   display: inline-block;
   font-size: 13px;
-  font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 999px;
+  font-weight: 700;
   margin-top: 8px;
   white-space: nowrap;
 }
 
 .badge-pass {
-  background: var(--pass-bg);
   color: var(--pass-text);
 }
 
 .badge-fail {
-  background: var(--fail-bg);
   color: var(--fail-text);
 }
 
 .badge-unknown {
-  background: var(--unknown-bg);
   color: var(--unknown-text);
+  font-weight: 500;
 }
 
 .new-cell {
@@ -243,7 +261,6 @@
 }
 
 .new-cell textarea,
-.testset-picker input,
 .testset-picker select {
   width: 100%;
   font: inherit;
@@ -256,7 +273,6 @@
 }
 
 .new-cell textarea:focus,
-.testset-picker input:focus,
 .testset-picker select:focus {
   outline: none;
   border-color: var(--accent);
@@ -268,6 +284,37 @@
   gap: 8px;
 }
 
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--code-bg);
+}
+
+.search-input svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.search-input input {
+  flex: 1;
+  font: inherit;
+  color: var(--text-h);
+  border: none;
+  background: transparent;
+  padding: 9px 0;
+}
+
+.search-input input:focus {
+  outline: none;
+}
+
 .testset-picker select option {
   padding: 4px 6px;
 }
@@ -277,16 +324,16 @@
   padding: 9px 18px;
   border: none;
   border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: #fff;
+  background: var(--primary-bg);
+  color: var(--primary-fg);
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: opacity 0.12s ease;
+  transition: background 0.12s ease;
 }
 
 .new-cell button:hover:not(:disabled) {
-  opacity: 0.88;
+  background: var(--primary-bg-hover);
 }
 
 .new-cell button:disabled {
@@ -311,12 +358,11 @@
 }
 
 .history-table th {
-  background: var(--sidebar-bg);
+  background: var(--bg);
   color: var(--text-h);
   font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  border-bottom-width: 2px;
 }
 
 .history-table tbody tr:last-child td {
@@ -334,4 +380,18 @@
 
 .history-row:hover {
   background: var(--row-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+  .mode-tag.mode-testset {
+    background: rgba(37, 99, 235, 0.15);
+    color: #93c5fd;
+    border-color: rgba(37, 99, 235, 0.4);
+  }
+
+  .mode-tag.mode-freeform {
+    background: rgba(124, 58, 237, 0.15);
+    color: #c4b5fd;
+    border-color: rgba(124, 58, 237, 0.4);
+  }
 }
