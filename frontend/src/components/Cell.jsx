@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
+import { ResizeHandle, useResizable } from '@astryxdesign/core/Resizable'
 import AgentInfoPanel from './AgentInfoPanel'
 import ResultTable from './ResultTable'
 import VerdictBadge from './VerdictBadge'
@@ -13,6 +14,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
   const [localError, setLocalError] = useState(null)
   const [collapsed, setCollapsed] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+  const infoPanelResize = useResizable({ defaultSize: 300, minSizePx: 220, maxSizePx: 480 })
 
   const isFreeform = cell.mode === 'freeform'
 
@@ -42,7 +44,11 @@ export default function Cell({ cell, onUpdate, onDelete }) {
   }
 
   return (
-    <div className={showInfo ? 'cell with-info-panel' : 'cell'} id={`cell-${cell.id}`}>
+    <div
+      className={showInfo ? 'cell with-info-panel' : 'cell'}
+      id={`cell-${cell.id}`}
+      style={showInfo ? { '--info-panel-width': `${infoPanelResize.size}px` } : undefined}
+    >
       <div className="cell-top">
         <div className="cell-header" onClick={() => setCollapsed((c) => !c)}>
           <span className={`mode-tag mode-${cell.mode}`}>
@@ -210,10 +216,19 @@ export default function Cell({ cell, onUpdate, onDelete }) {
       </div>
 
       {showInfo && (
-        <AgentInfoPanel
-          relevantTables={cell.relevant_tables}
-          intermediateSteps={cell.intermediate_steps}
-        />
+        <>
+          <ResizeHandle
+            resizable={infoPanelResize.props}
+            direction="horizontal"
+            isReversed
+            hasDivider
+            label="정보 패널 크기 조절"
+          />
+          <AgentInfoPanel
+            relevantTables={cell.relevant_tables}
+            intermediateSteps={cell.intermediate_steps}
+          />
+        </>
       )}
     </div>
   )
