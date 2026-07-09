@@ -375,6 +375,52 @@
   color: var(--fail-text);
 }
 
+.difficulty-filter {
+  display: flex;
+  gap: 6px;
+}
+
+.difficulty-filter-chip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.difficulty-filter-chip:hover {
+  background: var(--row-hover);
+}
+
+.difficulty-filter-chip.active {
+  background: var(--text-h);
+  border-color: var(--text-h);
+  color: var(--bg);
+}
+
+.difficulty-filter-chip.difficulty-simple.active {
+  background: var(--pass-text);
+  border-color: var(--pass-text);
+  color: #fff;
+}
+
+.difficulty-filter-chip.difficulty-moderate.active {
+  background: #c2410c;
+  border-color: #c2410c;
+  color: #fff;
+}
+
+.difficulty-filter-chip.difficulty-challenging.active {
+  background: var(--fail-text);
+  border-color: var(--fail-text);
+  color: #fff;
+}
+
 .question-item .question-text {
   font-size: 14px;
   line-height: 1.45;

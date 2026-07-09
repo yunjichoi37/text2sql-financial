@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { listTestset } from '../api'
 
+const DIFFICULTY_ORDER = ['simple', 'moderate', 'challenging']
+
 export default function TestsetPicker({ value, onChange }) {
   const [questions, setQuestions] = useState([])
   const [filter, setFilter] = useState('')
+  const [difficultyFilter, setDifficultyFilter] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -12,8 +15,14 @@ export default function TestsetPicker({ value, onChange }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = questions.filter((q) =>
-    q.question.toLowerCase().includes(filter.toLowerCase())
+  const availableDifficulties = DIFFICULTY_ORDER.filter((d) =>
+    questions.some((q) => q.difficulty === d)
+  )
+
+  const filtered = questions.filter(
+    (q) =>
+      q.question.toLowerCase().includes(filter.toLowerCase()) &&
+      (difficultyFilter == null || q.difficulty === difficultyFilter)
   )
 
   return (
@@ -30,6 +39,31 @@ export default function TestsetPicker({ value, onChange }) {
           onChange={(e) => setFilter(e.target.value)}
         />
       </div>
+      {!loading && availableDifficulties.length > 0 && (
+        <div className="difficulty-filter">
+          <button
+            type="button"
+            className={difficultyFilter == null ? 'difficulty-filter-chip active' : 'difficulty-filter-chip'}
+            onClick={() => setDifficultyFilter(null)}
+          >
+            전체
+          </button>
+          {availableDifficulties.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className={
+                difficultyFilter === d
+                  ? `difficulty-filter-chip difficulty-${d} active`
+                  : `difficulty-filter-chip difficulty-${d}`
+              }
+              onClick={() => setDifficultyFilter(difficultyFilter === d ? null : d)}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      )}
       {loading ? (
         <p className="muted">테스트셋 불러오는 중...</p>
       ) : (
