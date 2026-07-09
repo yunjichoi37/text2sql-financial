@@ -45,3 +45,23 @@ class CellOut(BaseModel):
     intermediate_steps: list[dict] | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class TableColumnInfo(BaseModel):
+    type: str | None = None
+    desc: str | None = None
+    values: str | None = None
+
+
+class TableInfo(BaseModel):
+    name: str
+    summary: str | None = None
+    columns: dict[str, TableColumnInfo]
+    notes: str | None = None
+
+
+class TableRowsResponse(BaseModel):
+    rows: list[dict]
+    total: int
+    page: int
+    page_size: int
