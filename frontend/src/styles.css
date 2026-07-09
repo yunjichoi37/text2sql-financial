@@ -82,6 +82,23 @@
   cursor: not-allowed;
 }
 
+.cell-actions button.danger {
+  border-color: var(--fail-text);
+  color: var(--fail-text);
+}
+
+.cell-actions button.danger:hover:not(:disabled) {
+  background: var(--fail-bg);
+  border-color: var(--fail-text);
+  color: var(--fail-text);
+}
+
+.delete-confirm-label {
+  font-size: 13px;
+  color: var(--fail-text);
+  align-self: center;
+}
+
 .cell textarea {
   width: 100%;
   font: inherit;

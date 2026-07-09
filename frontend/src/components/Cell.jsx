@@ -4,6 +4,7 @@ import VerdictBadge from './VerdictBadge'
 
 export default function Cell({ cell, onUpdate, onDelete }) {
   const [editing, setEditing] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [draft, setDraft] = useState(cell.question)
   const [busy, setBusy] = useState(false)
   const [localError, setLocalError] = useState(null)
@@ -31,6 +32,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
     } catch (e) {
       setLocalError(e.message)
       setBusy(false)
+      setConfirmingDelete(false)
     }
   }
 
@@ -77,9 +79,21 @@ export default function Cell({ cell, onUpdate, onDelete }) {
             <button type="button" disabled={busy} onClick={() => runUpdate({})}>
               {busy ? '실행 중...' : '다시 실행'}
             </button>
-            <button type="button" disabled={busy} onClick={handleDelete}>
-              삭제
-            </button>
+            {confirmingDelete ? (
+              <>
+                <span className="delete-confirm-label">정말 삭제할까요?</span>
+                <button type="button" disabled={busy} onClick={handleDelete} className="danger">
+                  {busy ? '삭제 중...' : '삭제 확인'}
+                </button>
+                <button type="button" disabled={busy} onClick={() => setConfirmingDelete(false)}>
+                  취소
+                </button>
+              </>
+            ) : (
+              <button type="button" disabled={busy} onClick={() => setConfirmingDelete(true)}>
+                삭제
+              </button>
+            )}
           </>
         )}
       </div>
