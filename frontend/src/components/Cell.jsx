@@ -44,6 +44,11 @@ export default function Cell({ cell, onUpdate, onDelete }) {
           {cell.mode === 'testset' ? '테스트' : '직접 질문'}
         </span>
         {cell.difficulty && <span className="difficulty-tag">{cell.difficulty}</span>}
+        {cell.mode === 'testset' && (
+          <span className="cell-header-verdict">
+            <VerdictBadge verdict={cell.match_verdict} />
+          </span>
+        )}
       </div>
 
       {editing ? (
@@ -152,7 +157,6 @@ export default function Cell({ cell, onUpdate, onDelete }) {
             </pre>
             <div className="section-label">정답 결과</div>
             <ResultTable data={cell.gold_result} />
-            <VerdictBadge verdict={cell.match_verdict} />
           </div>
         )}
       </div>

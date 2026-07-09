@@ -1,5 +1,16 @@
 /* 셀 노트북 UI 전용 스타일 */
 
+/* VerdictBadge: Astryx Badge의 solid 배경을 없애고 컬러 텍스트만 남김 */
+.astryx-badge[data-variant='success'] {
+  background-color: transparent;
+  color: var(--pass-text);
+}
+
+.astryx-badge[data-variant='error'] {
+  background-color: transparent;
+  color: var(--fail-text);
+}
+
 .cell-list {
   display: flex;
   flex-direction: column;
@@ -25,6 +36,10 @@
   gap: 8px;
   align-items: center;
   margin-bottom: 10px;
+}
+
+.cell-header-verdict {
+  margin-left: auto;
 }
 
 .mode-tag {
@@ -190,27 +205,6 @@
   background: var(--row-hover);
 }
 
-.badge {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: 700;
-  margin-top: 8px;
-  white-space: nowrap;
-}
-
-.badge-pass {
-  color: var(--pass-text);
-}
-
-.badge-fail {
-  color: var(--fail-text);
-}
-
-.badge-unknown {
-  color: var(--unknown-text);
-  font-weight: 500;
-}
-
 .new-cell {
   border-style: dashed;
   background: var(--sidebar-bg);
@@ -373,10 +367,6 @@
 
 .history-table tbody tr:last-child td {
   border-bottom: none;
-}
-
-.history-table .badge {
-  margin-top: 0;
 }
 
 .history-row {
