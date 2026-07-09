@@ -112,20 +112,25 @@ export default function Cell({ cell, onUpdate, onDelete }) {
 
       {cell.ai_answer && <div className="cell-answer">{cell.ai_answer}</div>}
 
-      <div className="section-label">실행 결과</div>
-      <ResultTable data={cell.ai_result} />
-
-      {cell.mode === 'testset' && (
-        <div className="testset-block">
-          <div className="section-label">정답 SQL</div>
-          <pre className="sql-block gold">
-            <code>{cell.gold_sql}</code>
-          </pre>
-          <div className="section-label">정답 결과</div>
-          <ResultTable data={cell.gold_result} />
-          <VerdictBadge verdict={cell.match_verdict} />
+      <div className={busy ? 'cell-results stale' : 'cell-results'}>
+        <div className="section-label">
+          실행 결과
+          {busy && <span className="stale-note"> (재실행 중 — 아래는 이전 결과)</span>}
         </div>
-      )}
+        <ResultTable data={cell.ai_result} />
+
+        {cell.mode === 'testset' && (
+          <div className="testset-block">
+            <div className="section-label">정답 SQL</div>
+            <pre className="sql-block gold">
+              <code>{cell.gold_sql}</code>
+            </pre>
+            <div className="section-label">정답 결과</div>
+            <ResultTable data={cell.gold_result} />
+            <VerdictBadge verdict={cell.match_verdict} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

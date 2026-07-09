@@ -142,6 +142,17 @@
   margin: 14px 0 6px;
 }
 
+.cell-results.stale {
+  opacity: 0.5;
+}
+
+.stale-note {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: var(--fail-text);
+}
+
 .sql-block {
   background: var(--code-bg);
   border-radius: var(--radius-sm);
