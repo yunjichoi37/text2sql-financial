@@ -24,8 +24,12 @@
   --radius-sm: 6px;
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Pretendard Variable', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
+
+  /* Astryx component font tokens (astryx.css sets these on :root; ours wins since it's unlayered) */
+  --font-family-body: var(--sans);
+  --font-family-heading: var(--sans);
 
   font: 15px/145% var(--sans);
   color-scheme: light dark;
