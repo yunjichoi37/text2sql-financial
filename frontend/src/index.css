@@ -171,6 +171,23 @@ body {
   padding: 24px 48px 96px;
 }
 
+.scroll-top-button {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transform: translateY(8px) scale(0.92);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.scroll-top-button.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
 .main-inner {
   max-width: 760px;
   margin: 0 auto;

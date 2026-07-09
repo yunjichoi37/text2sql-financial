@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Button } from '@astryxdesign/core/Button'
+import { Icon } from '@astryxdesign/core/Icon'
 import { createCell, deleteCell, listCells, updateCell } from './api'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
@@ -49,12 +51,21 @@ function App() {
   const [error, setError] = useState(null)
   const [view, setView] = useState('test')
   const [scrollToId, setScrollToId] = useState(null)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
     listCells()
       .then(setCells)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    function onScroll() {
+      setShowScrollTop(window.scrollY > 400)
+    }
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
@@ -149,6 +160,15 @@ function App() {
           )}
         </div>
       </main>
+
+      <Button
+        className={showScrollTop ? 'scroll-top-button visible' : 'scroll-top-button'}
+        variant="secondary"
+        isIconOnly
+        icon={<Icon icon="arrowUp" />}
+        label="맨 위로"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      />
     </div>
   )
 }
