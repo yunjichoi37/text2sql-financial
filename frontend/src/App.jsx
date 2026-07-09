@@ -83,13 +83,17 @@ function App() {
   }
 
   async function handleCreate(body) {
+    const start = performance.now()
     const newCell = await createCell(body)
-    setCells((prev) => [...prev, newCell])
+    const durationMs = performance.now() - start
+    setCells((prev) => [...prev, { ...newCell, _durationMs: durationMs }])
   }
 
   async function handleUpdate(id, body) {
+    const start = performance.now()
     const updated = await updateCell(id, body)
-    setCells((prev) => prev.map((c) => (c.id === id ? updated : c)))
+    const durationMs = performance.now() - start
+    setCells((prev) => prev.map((c) => (c.id === id ? { ...updated, _durationMs: durationMs } : c)))
   }
 
   async function handleDelete(id) {

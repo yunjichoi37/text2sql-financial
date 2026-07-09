@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
+import { Icon } from '@astryxdesign/core/Icon'
 import ResultTable from './ResultTable'
 import VerdictBadge from './VerdictBadge'
 
@@ -9,6 +10,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
   const [draft, setDraft] = useState(cell.question)
   const [busy, setBusy] = useState(false)
   const [localError, setLocalError] = useState(null)
+  const [collapsed, setCollapsed] = useState(false)
 
   const isFreeform = cell.mode === 'freeform'
 
@@ -44,11 +46,21 @@ export default function Cell({ cell, onUpdate, onDelete }) {
           {cell.mode === 'testset' ? '테스트' : '직접 질문'}
         </span>
         {cell.difficulty && <span className="difficulty-tag">{cell.difficulty}</span>}
-        {cell.mode === 'testset' && (
-          <span className="cell-header-verdict">
-            <VerdictBadge verdict={cell.match_verdict} />
-          </span>
+        {typeof cell._durationMs === 'number' && (
+          <span className="duration-tag">{(cell._durationMs / 1000).toFixed(1)}초</span>
         )}
+        <div className="cell-header-trailing">
+          {cell.mode === 'testset' && <VerdictBadge verdict={cell.match_verdict} />}
+          <Button
+            className={collapsed ? 'collapse-toggle' : 'collapse-toggle expanded'}
+            variant="ghost"
+            size="sm"
+            isIconOnly
+            icon={<Icon icon="chevronDown" />}
+            label={collapsed ? '펼치기' : '접기'}
+            onClick={() => setCollapsed((c) => !c)}
+          />
+        </div>
       </div>
 
       {editing ? (
@@ -128,37 +140,41 @@ export default function Cell({ cell, onUpdate, onDelete }) {
         )}
       </div>
 
-      {localError && <div className="cell-error">에러: {localError}</div>}
-      {cell.error && <div className="cell-error">에러: {cell.error}</div>}
+      <div className={collapsed ? 'cell-collapsible' : 'cell-collapsible expanded'}>
+        <div className="cell-collapsible-inner">
+          {localError && <div className="cell-error">에러: {localError}</div>}
+          {cell.error && <div className="cell-error">에러: {cell.error}</div>}
 
-      {cell.ai_sql && (
-        <>
-          <div className="section-label">AI가 생성한 SQL</div>
-          <pre className="sql-block">
-            <code>{cell.ai_sql}</code>
-          </pre>
-        </>
-      )}
+          {cell.ai_sql && (
+            <>
+              <div className="section-label">AI가 생성한 SQL</div>
+              <pre className="sql-block">
+                <code>{cell.ai_sql}</code>
+              </pre>
+            </>
+          )}
 
-      {cell.ai_answer && <div className="cell-answer">{cell.ai_answer}</div>}
+          {cell.ai_answer && <div className="cell-answer">{cell.ai_answer}</div>}
 
-      <div className={busy ? 'cell-results stale' : 'cell-results'}>
-        <div className="section-label">
-          실행 결과
-          {busy && <span className="stale-note"> (재실행 중 — 아래는 이전 결과)</span>}
-        </div>
-        <ResultTable data={cell.ai_result} />
+          <div className={busy ? 'cell-results stale' : 'cell-results'}>
+            <div className="section-label">
+              실행 결과
+              {busy && <span className="stale-note"> (재실행 중 — 아래는 이전 결과)</span>}
+            </div>
+            <ResultTable data={cell.ai_result} />
 
-        {cell.mode === 'testset' && (
-          <div className="testset-block">
-            <div className="section-label">정답 SQL</div>
-            <pre className="sql-block gold">
-              <code>{cell.gold_sql}</code>
-            </pre>
-            <div className="section-label">정답 결과</div>
-            <ResultTable data={cell.gold_result} />
+            {cell.mode === 'testset' && (
+              <div className="testset-block">
+                <div className="section-label">정답 SQL</div>
+                <pre className="sql-block gold">
+                  <code>{cell.gold_sql}</code>
+                </pre>
+                <div className="section-label">정답 결과</div>
+                <ResultTable data={cell.gold_result} />
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
