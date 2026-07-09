@@ -52,23 +52,6 @@ def render_message(msg: dict) -> None:
             df = pd.read_csv(msg["csv_path"])
             st.dataframe(df)
 
-        # 5. 차트 복원
-        if msg.get("csv_path") and msg.get("chart_config", {}).get("possible"):
-            df          = pd.read_csv(msg["csv_path"])
-            chart_config = msg["chart_config"]
-            x, y        = chart_config["x"], chart_config["y"]
-            chart_type  = chart_config["type"]
-
-            st.markdown("**📊 Chart**")
-            if chart_type == "bar":
-                st.bar_chart(df.set_index(x)[y])
-            elif chart_type == "line":
-                st.line_chart(df.set_index(x)[y])
-            elif chart_type == "pie":
-                import plotly.express as px
-                fig = px.pie(df, names=x, values=y)
-                st.plotly_chart(fig)
-
 
 for msg in st.session_state["messages"]:
     render_message(msg)
@@ -129,23 +112,6 @@ if user_input := st.chat_input("질문을 입력하세요..."):
                 df = result["df"]
                 st.dataframe(df)
 
-            # 차트 렌더링 (CSV 블록 바로 아래)
-            chart_config = result.get("chart_config", {})
-            df = result.get("df")
-            if chart_config.get("possible"):
-                x, y      = chart_config["x"], chart_config["y"]
-                chart_type = chart_config["type"]
-
-                st.markdown("**📊 Chart**")
-                if chart_type == "bar":
-                    st.bar_chart(df.set_index(x)[y])
-                elif chart_type == "line":
-                    st.line_chart(df.set_index(x)[y])
-                elif chart_type == "pie":
-                    import plotly.express as px
-                    fig = px.pie(df, names=x, values=y)
-                    st.plotly_chart(fig)
-
         # 세션에 저장 (에러 포함)
         st.session_state["messages"].append({
             "role":               "assistant",
@@ -155,5 +121,4 @@ if user_input := st.chat_input("질문을 입력하세요..."):
             "table_meta":         result.get("table_meta", ""),
             "rel_meta":           result.get("rel_meta", ""),
             "intermediate_steps": result.get("intermediate_steps", []),
-            "chart_config":       result.get("chart_config", {"possible": False}),
         })

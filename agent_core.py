@@ -24,8 +24,6 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 from metadata_loader import get_relevant_tables, load_table_metadata, load_relationships
 
-import re
-import json
 import pandas as pd
 
 warnings.filterwarnings("ignore")
@@ -245,56 +243,6 @@ def load_metadata_for_query(user_input: str) -> tuple[list[str], str, str]:
     print(f"[TOKEN] rel_meta:   {count_tokens(rel_meta)}")
     return relevant_tables, table_meta, rel_meta
 
-def decide_chart(df: pd.DataFrame, user_question: str) -> dict:
-    """df 스키마를 보고 LLM이 차트 가능 여부와 타입을 판단한다."""
-    if df is None or len(df) <= 1:
-        return {"possible": False}
-
-    llm = get_llm()
-
-    schema_info = {
-        "columns": list(df.columns),
-        "dtypes":  {col: str(dtype) for col, dtype in df.dtypes.items()},
-        "sample":  df.head(2).to_dict(orient="records"),
-    }
-
-    prompt = f"""아래는 SQL 쿼리 결과 데이터의 스키마입니다.
-{json.dumps(schema_info, ensure_ascii=False)}
-
-사용자 질문: {user_question}
-
-이 데이터를 차트로 표현할 수 있나요?
-가능하면 아래 JSON 형식으로만 답하세요. 다른 말은 하지 마세요.
-{{"possible": true, "type": "bar", "x": "컬럼명", "y": "컬럼명"}}
-
-type은 bar, line, pie 중 하나입니다.
-불가능하면: {{"possible": false}}"""
-
-    try:
-        response = llm.invoke([HumanMessage(content=prompt)])
-        match = re.search(r'\{.*\}', response.text, re.DOTALL)
-        if not match:
-            return {"possible": False}
-
-        config = json.loads(match.group())
-
-        # 컬럼 존재 검증
-        if config.get("possible"):
-            # 1. 빈 문자열 체크 먼저
-            if not config.get("x") or not config.get("y"):
-                return {"possible": False}
-            # 2. 그 다음 컬럼 존재 검증
-            if config.get("x") not in df.columns or config.get("y") not in df.columns:
-                return {"possible": False}
-            # 3. y축 숫자 타입 검증
-            if not pd.api.types.is_numeric_dtype(df[config["y"]]):
-                return {"possible": False}
-
-        return config
-
-    except Exception:
-        return {"possible": False}
-
 def run_query(user_input: str) -> dict:
     """
     사용자 질문 하나를 처리하고 결과 dict를 반환한다.
@@ -328,14 +276,11 @@ def run_query(user_input: str) -> dict:
         print(f"[STEPS] 총 tool 호출 횟수: {len(intermediate_steps)}")
 
         csv_path, df     = save_csv_if_needed(results_holder)
-        chart_config     = decide_chart(df, user_input) if df is not None else {"possible": False}
-        print(f"[CHART] chart_config: {chart_config}")
 
         return {
             "answer":             answer,
             "csv_path":           csv_path,
             "df":                 df,
-            "chart_config":       chart_config,
             "relevant_tables":    relevant_tables,
             "table_meta":         table_meta,
             "rel_meta":           rel_meta,
@@ -348,7 +293,6 @@ def run_query(user_input: str) -> dict:
             "answer":             "",
             "csv_path":           None,
             "df":                 None,
-            "chart_config":       {"possible": False},
             "relevant_tables":    relevant_tables,
             "table_meta":         table_meta,
             "rel_meta":           rel_meta,
