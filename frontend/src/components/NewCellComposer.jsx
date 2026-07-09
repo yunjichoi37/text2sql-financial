@@ -43,7 +43,7 @@ export default function NewCellComposer({ mode, onCreate }) {
 
       {error && <div className="cell-error">에러: {error}</div>}
 
-      <button type="button" disabled={!canRun || running} onClick={handleRun}>
+      <button type="button" className="run-button" disabled={!canRun || running} onClick={handleRun}>
         {running ? '실행 중...' : '실행'}
       </button>
     </div>

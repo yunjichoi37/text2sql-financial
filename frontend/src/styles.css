@@ -262,8 +262,7 @@
   margin-bottom: 4px;
 }
 
-.new-cell textarea,
-.testset-picker select {
+.new-cell textarea {
   width: 100%;
   font: inherit;
   padding: 10px 12px;
@@ -274,8 +273,7 @@
   transition: border-color 0.12s ease;
 }
 
-.new-cell textarea:focus,
-.testset-picker select:focus {
+.new-cell textarea:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -317,11 +315,74 @@
   outline: none;
 }
 
-.testset-picker select option {
-  padding: 4px 6px;
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
 }
 
-.new-cell button {
+.question-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.question-item:hover {
+  background: var(--row-hover);
+}
+
+.question-item.active {
+  background: var(--accent-bg);
+}
+
+.question-item .difficulty-chip {
+  flex: none;
+  min-width: 74px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 0;
+  border-radius: 999px;
+}
+
+.difficulty-chip.difficulty-simple {
+  background: var(--pass-bg);
+  color: var(--pass-text);
+}
+
+.difficulty-chip.difficulty-moderate {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.difficulty-chip.difficulty-challenging {
+  background: var(--fail-bg);
+  color: var(--fail-text);
+}
+
+.question-item .question-text {
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.run-button {
   margin-top: 12px;
   padding: 9px 18px;
   border: none;
@@ -334,11 +395,11 @@
   transition: background 0.12s ease;
 }
 
-.new-cell button:hover:not(:disabled) {
+.run-button:hover:not(:disabled) {
   background: var(--primary-bg-hover);
 }
 
-.new-cell button:disabled {
+.run-button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -395,5 +456,10 @@
     background: rgba(124, 58, 237, 0.15);
     color: #c4b5fd;
     border-color: rgba(124, 58, 237, 0.4);
+  }
+
+  .difficulty-chip.difficulty-moderate {
+    background: rgba(194, 65, 12, 0.2);
+    color: #fb923c;
   }
 }

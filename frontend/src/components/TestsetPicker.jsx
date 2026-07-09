@@ -33,17 +33,22 @@ export default function TestsetPicker({ value, onChange }) {
       {loading ? (
         <p className="muted">테스트셋 불러오는 중...</p>
       ) : (
-        <select
-          size={6}
-          value={value ?? ''}
-          onChange={(e) => onChange(Number(e.target.value))}
-        >
+        <div className="question-list" role="listbox">
           {filtered.map((q) => (
-            <option key={q.question_id} value={q.question_id}>
-              [{q.difficulty}] {q.question}
-            </option>
+            <button
+              key={q.question_id}
+              type="button"
+              role="option"
+              aria-selected={value === q.question_id}
+              className={value === q.question_id ? 'question-item active' : 'question-item'}
+              onClick={() => onChange(q.question_id)}
+            >
+              <span className={`difficulty-chip difficulty-${q.difficulty}`}>{q.difficulty}</span>
+              <span className="question-text">{q.question}</span>
+            </button>
           ))}
-        </select>
+          {filtered.length === 0 && <p className="muted">검색 결과가 없습니다.</p>}
+        </div>
       )}
     </div>
   )
