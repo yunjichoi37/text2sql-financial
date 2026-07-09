@@ -327,8 +327,8 @@
 }
 
 .difficulty-chip.difficulty-moderate {
-  background: #fff7ed;
-  color: #c2410c;
+  background: #fffbeb;
+  color: #d97706;
 }
 
 .difficulty-chip.difficulty-challenging {
@@ -402,7 +402,7 @@
   }
 
   .difficulty-chip.difficulty-moderate {
-    background: rgba(194, 65, 12, 0.2);
-    color: #fb923c;
+    background: rgba(217, 119, 6, 0.2);
+    color: #fbbf24;
   }
 }
