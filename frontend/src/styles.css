@@ -211,6 +211,36 @@
   margin-bottom: 4px;
 }
 
+.cell-pending {
+  border-style: dashed;
+  border-color: var(--accent-border);
+}
+
+.cell-pending-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.spinner {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .new-cell textarea {
   width: 100%;
   font: inherit;

@@ -23,7 +23,7 @@ function DifficultyDot({ difficulty }) {
   )
 }
 
-export default function TestsetPicker({ value, onChange }) {
+export default function TestsetPicker({ value, onChange, onQuestionsChange }) {
   const [questions, setQuestions] = useState([])
   const [filter, setFilter] = useState('')
   const [difficultyFilter, setDifficultyFilter] = useState('all')
@@ -31,8 +31,13 @@ export default function TestsetPicker({ value, onChange }) {
 
   useEffect(() => {
     listTestset()
-      .then(setQuestions)
+      .then((data) => {
+        setQuestions(data)
+        onQuestionsChange?.(data)
+      })
       .finally(() => setLoading(false))
+    // onQuestionsChange intentionally excluded: only meant to fire once, when the testset loads
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const availableDifficulties = DIFFICULTY_ORDER.filter((d) =>
