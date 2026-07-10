@@ -20,7 +20,7 @@ _primary_key_cache: dict[str, str | None] = {}
 
 def _get_row_count(table_name: str) -> int:
     if table_name not in _row_count_cache:
-        df = run_raw_sql(f"SELECT COUNT(*) AS count FROM {table_name}")
+        df = run_raw_sql(f'SELECT COUNT(*) AS count FROM "{table_name}"')
         _row_count_cache[table_name] = int(df.iloc[0]["count"])
     return _row_count_cache[table_name]
 
@@ -68,11 +68,12 @@ def get_table_rows(table_name: str, page: int = 1, page_size: int = 50):
 
     # table_name은 위에서 ALL_TABLES(파일시스템 기반 화이트리스트) 검증을 통과한 값만
     # SQL에 들어가므로 인젝션 위험 없음. page/page_size는 FastAPI가 int로 강제 변환함.
+    # 테이블/컬럼명은 큰따옴표로 감싸 order 같은 예약어와 충돌하지 않게 함.
     total = _get_row_count(table_name)
     offset = (page - 1) * page_size
     primary_key = _get_primary_key(table_name)
-    order_clause = f"ORDER BY {primary_key}" if primary_key else ""
-    df = run_raw_sql(f"SELECT * FROM {table_name} {order_clause} LIMIT {page_size} OFFSET {offset}")
+    order_clause = f'ORDER BY "{primary_key}"' if primary_key else ""
+    df = run_raw_sql(f'SELECT * FROM "{table_name}" {order_clause} LIMIT {page_size} OFFSET {offset}')
 
     return TableRowsResponse(
         rows=to_jsonable_records(df),
