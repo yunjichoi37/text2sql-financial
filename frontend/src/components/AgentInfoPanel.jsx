@@ -16,17 +16,39 @@ export default function AgentInfoPanel({ relevantTables, intermediateSteps }) {
 
       <div className="section-label">에이전트 사고 흐름</div>
       {intermediateSteps && intermediateSteps.length > 0 ? (
-        intermediateSteps.map((step, i) => (
-          <div key={i} className="agent-step">
-            <div className="agent-step-tool">{step.tool}</div>
-            {step.input?.sql_query && (
-              <pre className="sql-block agent-step-sql">
-                <code>{step.input.sql_query}</code>
-              </pre>
-            )}
-            {step.output && <div className="agent-step-output">{step.output}</div>}
-          </div>
-        ))
+        (() => {
+          const sqlAttemptTotal = intermediateSteps.filter(
+            (s) => s.tool === 'execute_sql_query'
+          ).length
+          let sqlAttemptCounter = 0
+
+          return intermediateSteps.map((step, i) => {
+            const isSqlStep = step.tool === 'execute_sql_query'
+            if (isSqlStep) sqlAttemptCounter += 1
+            const isError =
+              typeof step.output === 'string' && step.output.startsWith('SQL 실행 에러')
+
+            return (
+              <div key={i} className={`agent-step${isError ? ' agent-step-error' : ''}`}>
+                <div className="agent-step-tool">
+                  {step.tool}
+                  {isSqlStep && sqlAttemptTotal > 1 && (
+                    <span className={`agent-step-attempt${isError ? ' is-error' : ''}`}>
+                      시도 {sqlAttemptCounter}
+                      {isError ? ' · 실행 에러' : ''}
+                    </span>
+                  )}
+                </div>
+                {step.input?.sql_query && (
+                  <pre className="sql-block agent-step-sql">
+                    <code>{step.input.sql_query}</code>
+                  </pre>
+                )}
+                {step.output && <div className="agent-step-output">{step.output}</div>}
+              </div>
+            )
+          })
+        })()
       ) : (
         <p className="muted">기록 없음</p>
       )}

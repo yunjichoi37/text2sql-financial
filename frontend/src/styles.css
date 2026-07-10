@@ -106,10 +106,32 @@
   font-size: 13px;
 }
 
+.agent-step-error {
+  border-color: var(--fail-text);
+}
+
 .agent-step-tool {
   font-weight: 600;
   color: var(--text-h);
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-step-attempt {
+  font-weight: 500;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.agent-step-attempt.is-error {
+  color: var(--fail-text);
+  border-color: var(--fail-text);
 }
 
 .agent-step-sql {
