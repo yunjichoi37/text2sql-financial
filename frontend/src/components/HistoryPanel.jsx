@@ -1,46 +1,96 @@
+import { useMemo } from 'react'
+import { Table, useTableSortableState, useTableSortable, proportional, pixel } from '@astryxdesign/core/Table'
 import VerdictBadge from './VerdictBadge'
 
-export default function HistoryPanel({ cells, onSelect }) {
-  const sorted = [...cells].sort(
-    (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+function useClickableRowPlugin(onSelect) {
+  return useMemo(
+    () => ({
+      transformBodyRow(props, item) {
+        return {
+          ...props,
+          htmlProps: {
+            ...props.htmlProps,
+            onClick: () => onSelect(item.id),
+            style: { ...props.htmlProps?.style, cursor: 'pointer' },
+          },
+        }
+      },
+    }),
+    [onSelect]
   )
+}
 
-  if (sorted.length === 0) {
+export default function HistoryPanel({ cells, onSelect }) {
+  const { sortedData, sortConfig } = useTableSortableState({
+    data: cells,
+    defaultSort: [{ sortKey: 'updated_at', direction: 'descending' }],
+    comparators: {
+      updated_at: (a, b) => new Date(a.updated_at) - new Date(b.updated_at),
+      mode: (a, b) => (a.mode === 'testset' ? '테스트' : '직접 질문').localeCompare(
+        b.mode === 'testset' ? '테스트' : '직접 질문'
+      ),
+    },
+  })
+  const sortPlugin = useTableSortable(sortConfig)
+  const clickableRowPlugin = useClickableRowPlugin(onSelect)
+
+  if (cells.length === 0) {
     return <p className="muted">아직 실행 기록이 없습니다.</p>
   }
 
+  const columns = [
+    {
+      key: 'mode',
+      header: '모드',
+      sortable: true,
+      width: pixel(96),
+      align: 'center',
+      renderCell: (c) => (
+        <span className={`mode-tag mode-${c.mode}`}>
+          {c.mode === 'testset' ? '테스트' : '직접 질문'}
+        </span>
+      ),
+    },
+    { key: 'question', header: '질문', sortable: true, width: proportional(3) },
+    {
+      key: 'difficulty',
+      header: '난이도',
+      sortable: true,
+      width: pixel(85),
+      align: 'center',
+      renderCell: (c) => c.difficulty || '—',
+    },
+    {
+      key: 'match_verdict',
+      header: '결과',
+      sortable: true,
+      width: pixel(90),
+      align: 'center',
+      renderCell: (c) =>
+        c.mode === 'testset' ? (
+          <VerdictBadge verdict={c.match_verdict} />
+        ) : (
+          <span className="muted">—</span>
+        ),
+    },
+    {
+      key: 'updated_at',
+      header: '시각',
+      sortable: true,
+      width: proportional(1),
+      renderCell: (c) => new Date(c.updated_at).toLocaleString(),
+    },
+  ]
+
   return (
-    <table className="history-table">
-      <thead>
-        <tr>
-          <th>모드</th>
-          <th>질문</th>
-          <th>난이도</th>
-          <th>결과</th>
-          <th>시각</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sorted.map((c) => (
-          <tr key={c.id} className="history-row" onClick={() => onSelect(c.id)}>
-            <td>
-              <span className={`mode-tag mode-${c.mode}`}>
-                {c.mode === 'testset' ? '테스트' : '직접 질문'}
-              </span>
-            </td>
-            <td>{c.question}</td>
-            <td>{c.difficulty || '—'}</td>
-            <td>
-              {c.mode === 'testset' ? (
-                <VerdictBadge verdict={c.match_verdict} />
-              ) : (
-                <span className="muted">—</span>
-              )}
-            </td>
-            <td>{new Date(c.updated_at).toLocaleString()}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <Table
+      data={sortedData}
+      columns={columns}
+      idKey="id"
+      density="compact"
+      dividers="grid"
+      hasHover
+      plugins={{ sort: sortPlugin, click: clickableRowPlugin }}
+    />
   )
 }
