@@ -38,6 +38,11 @@ ALTER TABLE cells
     ADD COLUMN IF NOT EXISTS intermediate_steps JSONB;
 """
 
+MIGRATE_ADD_DURATION_MS_COLUMN_SQL = """
+ALTER TABLE cells
+    ADD COLUMN IF NOT EXISTS duration_ms INTEGER;
+"""
+
 
 def main() -> None:
     conn = psycopg2.connect(DATABASE_URL)
@@ -47,6 +52,7 @@ def main() -> None:
         cur.execute(CREATE_TABLE_SQL)
         cur.execute(CREATE_INDEX_SQL)
         cur.execute(MIGRATE_ADD_AGENT_INFO_COLUMNS_SQL)
+        cur.execute(MIGRATE_ADD_DURATION_MS_COLUMN_SQL)
         cur.close()
         print("cells 테이블 준비 완료")
     finally:

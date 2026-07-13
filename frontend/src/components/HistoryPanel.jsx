@@ -29,6 +29,7 @@ export default function HistoryPanel({ cells, onSelect }) {
       mode: (a, b) => (a.mode === 'testset' ? '테스트' : '직접 질문').localeCompare(
         b.mode === 'testset' ? '테스트' : '직접 질문'
       ),
+      duration_ms: (a, b) => (a.duration_ms ?? -1) - (b.duration_ms ?? -1),
     },
   })
   const sortPlugin = useTableSortable(sortConfig)
@@ -72,6 +73,15 @@ export default function HistoryPanel({ cells, onSelect }) {
         ) : (
           <span className="muted">—</span>
         ),
+    },
+    {
+      key: 'duration_ms',
+      header: '소요시간',
+      sortable: true,
+      width: pixel(80),
+      align: 'center',
+      renderCell: (c) =>
+        typeof c.duration_ms === 'number' ? `${(c.duration_ms / 1000).toFixed(1)}s` : '—',
     },
     {
       key: 'updated_at',

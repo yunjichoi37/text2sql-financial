@@ -43,6 +43,7 @@ class CellOut(BaseModel):
     error: str | None = None
     relevant_tables: list[str] | None = None
     intermediate_steps: list[dict] | None = None
+    duration_ms: int | None = None
     created_at: datetime
     updated_at: datetime
 

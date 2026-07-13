@@ -55,8 +55,8 @@ export default function Cell({ cell, onUpdate, onDelete }) {
             {cell.mode === 'testset' ? '테스트' : '직접 질문'}
           </span>
           {cell.difficulty && <span className="difficulty-tag">{cell.difficulty}</span>}
-          {typeof cell._durationMs === 'number' && (
-            <span className="duration-tag">{(cell._durationMs / 1000).toFixed(1)}초</span>
+          {typeof cell.duration_ms === 'number' && (
+            <span className="duration-tag">{(cell.duration_ms / 1000).toFixed(1)}s</span>
           )}
           <div className="cell-header-trailing">
             {cell.mode === 'testset' && <VerdictBadge verdict={cell.match_verdict} />}
