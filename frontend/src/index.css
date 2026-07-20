@@ -86,6 +86,10 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
+  --color-neutral: #E8EAEE;
+  --color-overlay-hover: #F4F6F7;
+  --duration-fast: 260ms;
+  --duration-medium: 550ms;
 }
 
 .sidebar-brand {
