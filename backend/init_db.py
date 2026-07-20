@@ -43,6 +43,16 @@ ALTER TABLE cells
     ADD COLUMN IF NOT EXISTS duration_ms INTEGER;
 """
 
+MIGRATE_ADD_SOFT_F1_COLUMN_SQL = """
+ALTER TABLE cells
+    ADD COLUMN IF NOT EXISTS soft_f1 DOUBLE PRECISION;
+"""
+
+MIGRATE_ADD_CELL_RUNS_SOFT_F1_COLUMN_SQL = """
+ALTER TABLE cell_runs
+    ADD COLUMN IF NOT EXISTS soft_f1 DOUBLE PRECISION;
+"""
+
 CREATE_TABLE_CELL_RUNS_SQL = """
 CREATE TABLE IF NOT EXISTS cell_runs (
     id                    SERIAL PRIMARY KEY,
@@ -75,10 +85,10 @@ CREATE INDEX IF NOT EXISTS idx_cell_runs_mode ON cell_runs (mode);
 BACKFILL_CELL_RUNS_SQL = """
 INSERT INTO cell_runs (cell_id, mode, question, testset_question_id, evidence, difficulty,
                         gold_sql, ai_sql, ai_answer, ai_result, gold_result, match_verdict,
-                        error, relevant_tables, intermediate_steps, duration_ms, created_at)
+                        error, relevant_tables, intermediate_steps, duration_ms, soft_f1, created_at)
 SELECT c.id, c.mode, c.question, c.testset_question_id, c.evidence, c.difficulty,
        c.gold_sql, c.ai_sql, c.ai_answer, c.ai_result, c.gold_result, c.match_verdict,
-       c.error, c.relevant_tables, c.intermediate_steps, c.duration_ms, c.updated_at
+       c.error, c.relevant_tables, c.intermediate_steps, c.duration_ms, c.soft_f1, c.updated_at
 FROM cells c
 WHERE NOT EXISTS (SELECT 1 FROM cell_runs cr WHERE cr.cell_id = c.id);
 """
@@ -93,8 +103,10 @@ def main() -> None:
         cur.execute(CREATE_INDEX_SQL)
         cur.execute(MIGRATE_ADD_AGENT_INFO_COLUMNS_SQL)
         cur.execute(MIGRATE_ADD_DURATION_MS_COLUMN_SQL)
+        cur.execute(MIGRATE_ADD_SOFT_F1_COLUMN_SQL)
         cur.execute(CREATE_TABLE_CELL_RUNS_SQL)
         cur.execute(CREATE_INDEX_CELL_RUNS_SQL)
+        cur.execute(MIGRATE_ADD_CELL_RUNS_SOFT_F1_COLUMN_SQL)
         cur.execute(BACKFILL_CELL_RUNS_SQL)
         cur.close()
         print("cells / cell_runs 테이블 준비 완료")

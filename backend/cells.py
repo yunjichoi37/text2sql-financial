@@ -6,7 +6,7 @@ import psycopg2.extras
 from fastapi import APIRouter, HTTPException
 
 from agent_core import run_query, run_raw_sql
-from backend.comparison import compare_results
+from backend.comparison import compare_results, compute_soft_f1
 from backend.db import dict_cursor, get_conn
 from backend.schemas import CellCreate, CellOut, CellUpdate
 from backend.testset import get_testset_question
@@ -40,6 +40,7 @@ def _execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
             "ai_result": None,
             "gold_result": None,
             "match_verdict": None,
+            "soft_f1": None,
             "error": result["error"],
             "relevant_tables": relevant_tables,
             "intermediate_steps": intermediate_steps,
@@ -52,12 +53,15 @@ def _execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
 
     gold_result = None
     match_verdict = None
+    soft_f1 = None
     error = None
     if mode == "testset" and gold_sql:
         try:
             gold_df = run_raw_sql(gold_sql)
             gold_result = to_jsonable_records(gold_df)
             match_verdict = compare_results(ai_result, gold_result)
+            # EX가 참이면 멀티셋이 완전히 같으므로 Soft F1도 항상 1.0 — 재계산할 필요 없음.
+            soft_f1 = 1.0 if match_verdict else compute_soft_f1(ai_result, gold_result)
         except Exception as e:
             error = f"정답 SQL 실행 에러: {e}"
 
@@ -67,6 +71,7 @@ def _execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
         "ai_result": ai_result,
         "gold_result": gold_result,
         "match_verdict": match_verdict,
+        "soft_f1": soft_f1,
         "error": error,
         "relevant_tables": relevant_tables,
         "intermediate_steps": intermediate_steps,
@@ -79,7 +84,7 @@ def _json_param(value):
 
 
 def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, gold_sql,
-                  ai_sql, ai_answer, ai_result, gold_result, match_verdict, error,
+                  ai_sql, ai_answer, ai_result, gold_result, match_verdict, soft_f1, error,
                   relevant_tables, intermediate_steps, duration_ms) -> dict:
     conn = get_conn()
     try:
@@ -88,11 +93,11 @@ def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, g
             """
             INSERT INTO cells (mode, question, testset_question_id, evidence, difficulty,
                                 gold_sql, ai_sql, ai_answer, ai_result, gold_result,
-                                match_verdict, error, relevant_tables, intermediate_steps,
+                                match_verdict, soft_f1, error, relevant_tables, intermediate_steps,
                                 duration_ms)
             VALUES (%(mode)s, %(question)s, %(testset_question_id)s, %(evidence)s, %(difficulty)s,
                     %(gold_sql)s, %(ai_sql)s, %(ai_answer)s, %(ai_result)s, %(gold_result)s,
-                    %(match_verdict)s, %(error)s, %(relevant_tables)s, %(intermediate_steps)s,
+                    %(match_verdict)s, %(soft_f1)s, %(error)s, %(relevant_tables)s, %(intermediate_steps)s,
                     %(duration_ms)s)
             RETURNING *;
             """,
@@ -108,6 +113,7 @@ def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, g
                 "ai_result": _json_param(ai_result),
                 "gold_result": _json_param(gold_result),
                 "match_verdict": match_verdict,
+                "soft_f1": soft_f1,
                 "error": error,
                 "relevant_tables": _json_param(relevant_tables),
                 "intermediate_steps": _json_param(intermediate_steps),
@@ -122,8 +128,8 @@ def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, g
 
 
 def _insert_cell_run(*, cell_id, mode, question, testset_question_id, evidence, difficulty,
-                      gold_sql, ai_sql, ai_answer, ai_result, gold_result, match_verdict, error,
-                      relevant_tables, intermediate_steps, duration_ms) -> None:
+                      gold_sql, ai_sql, ai_answer, ai_result, gold_result, match_verdict, soft_f1,
+                      error, relevant_tables, intermediate_steps, duration_ms) -> None:
     conn = get_conn()
     try:
         cur = dict_cursor(conn)
@@ -131,11 +137,11 @@ def _insert_cell_run(*, cell_id, mode, question, testset_question_id, evidence, 
             """
             INSERT INTO cell_runs (cell_id, mode, question, testset_question_id, evidence,
                                     difficulty, gold_sql, ai_sql, ai_answer, ai_result,
-                                    gold_result, match_verdict, error, relevant_tables,
+                                    gold_result, match_verdict, soft_f1, error, relevant_tables,
                                     intermediate_steps, duration_ms)
             VALUES (%(cell_id)s, %(mode)s, %(question)s, %(testset_question_id)s, %(evidence)s,
                     %(difficulty)s, %(gold_sql)s, %(ai_sql)s, %(ai_answer)s, %(ai_result)s,
-                    %(gold_result)s, %(match_verdict)s, %(error)s, %(relevant_tables)s,
+                    %(gold_result)s, %(match_verdict)s, %(soft_f1)s, %(error)s, %(relevant_tables)s,
                     %(intermediate_steps)s, %(duration_ms)s)
             """,
             {
@@ -151,6 +157,7 @@ def _insert_cell_run(*, cell_id, mode, question, testset_question_id, evidence, 
                 "ai_result": _json_param(ai_result),
                 "gold_result": _json_param(gold_result),
                 "match_verdict": match_verdict,
+                "soft_f1": soft_f1,
                 "error": error,
                 "relevant_tables": _json_param(relevant_tables),
                 "intermediate_steps": _json_param(intermediate_steps),
@@ -190,7 +197,8 @@ def _get_cell(cell_id: int) -> dict | None:
 
 
 def _update_cell(cell_id: int, *, question, ai_sql, ai_answer, ai_result, gold_result,
-                  match_verdict, error, relevant_tables, intermediate_steps, duration_ms) -> dict:
+                  match_verdict, soft_f1, error, relevant_tables, intermediate_steps,
+                  duration_ms) -> dict:
     conn = get_conn()
     try:
         cur = dict_cursor(conn)
@@ -199,7 +207,7 @@ def _update_cell(cell_id: int, *, question, ai_sql, ai_answer, ai_result, gold_r
             UPDATE cells
             SET question = %(question)s, ai_sql = %(ai_sql)s, ai_answer = %(ai_answer)s,
                 ai_result = %(ai_result)s, gold_result = %(gold_result)s,
-                match_verdict = %(match_verdict)s, error = %(error)s,
+                match_verdict = %(match_verdict)s, soft_f1 = %(soft_f1)s, error = %(error)s,
                 relevant_tables = %(relevant_tables)s, intermediate_steps = %(intermediate_steps)s,
                 duration_ms = %(duration_ms)s,
                 updated_at = now()
@@ -214,6 +222,7 @@ def _update_cell(cell_id: int, *, question, ai_sql, ai_answer, ai_result, gold_r
                 "ai_result": _json_param(ai_result),
                 "gold_result": _json_param(gold_result),
                 "match_verdict": match_verdict,
+                "soft_f1": soft_f1,
                 "error": error,
                 "relevant_tables": _json_param(relevant_tables),
                 "intermediate_steps": _json_param(intermediate_steps),

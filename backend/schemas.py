@@ -40,6 +40,7 @@ class CellOut(BaseModel):
     ai_result: list[dict] | None = None
     gold_result: list[dict] | None = None
     match_verdict: bool | None = None
+    soft_f1: float | None = None
     error: str | None = None
     relevant_tables: list[str] | None = None
     intermediate_steps: list[dict] | None = None
@@ -62,6 +63,7 @@ class CellRunOut(BaseModel):
     ai_result: list[dict] | None = None
     gold_result: list[dict] | None = None
     match_verdict: bool | None = None
+    soft_f1: float | None = None
     error: str | None = None
     relevant_tables: list[str] | None = None
     intermediate_steps: list[dict] | None = None
