@@ -203,6 +203,12 @@
   min-height: 0;
 }
 
+.run-detail-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
 .run-detail-meta {
   display: flex;
   gap: 8px;
