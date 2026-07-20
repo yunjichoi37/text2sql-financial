@@ -3,7 +3,7 @@ import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
 import { ResizeHandle, useResizable } from '@astryxdesign/core/Resizable'
 import AgentInfoPanel from './AgentInfoPanel'
-import ResultTable from './ResultTable'
+import CellResultBody from './CellResultBody'
 import VerdictBadge from './VerdictBadge'
 
 export default function Cell({ cell, onUpdate, onDelete }) {
@@ -173,45 +173,16 @@ export default function Cell({ cell, onUpdate, onDelete }) {
       <div className={collapsed ? 'cell-collapsible' : 'cell-collapsible expanded'}>
         <div className="cell-collapsible-inner">
           {localError && <div className="cell-error">에러: {localError}</div>}
-          {cell.error && <div className="cell-error">에러: {cell.error}</div>}
-
-          {cell.ai_sql && (
-            <>
-              <div className="section-label">AI가 생성한 SQL</div>
-              <pre className="sql-block">
-                <code>{cell.ai_sql}</code>
-              </pre>
-            </>
-          )}
-
-          {cell.ai_answer && <div className="cell-answer">{cell.ai_answer}</div>}
-
-          <div className={busy ? 'cell-results stale' : 'cell-results'}>
-            <div className="section-label">
-              실행 결과
-              {Array.isArray(cell.ai_result) && (
-                <span className="row-count"> ({cell.ai_result.length}행)</span>
-              )}
-              {busy && <span className="stale-note"> (재실행 중 - 아래는 이전 결과)</span>}
-            </div>
-            <ResultTable data={cell.ai_result} />
-
-            {cell.mode === 'testset' && (
-              <div className="testset-block">
-                <div className="section-label">정답 SQL</div>
-                <pre className="sql-block gold">
-                  <code>{cell.gold_sql}</code>
-                </pre>
-                <div className="section-label">
-                  정답 결과
-                  {Array.isArray(cell.gold_result) && (
-                    <span className="row-count"> ({cell.gold_result.length}행)</span>
-                  )}
-                </div>
-                <ResultTable data={cell.gold_result} />
-              </div>
-            )}
-          </div>
+          <CellResultBody
+            error={cell.error}
+            aiSql={cell.ai_sql}
+            aiAnswer={cell.ai_answer}
+            aiResult={cell.ai_result}
+            mode={cell.mode}
+            goldSql={cell.gold_sql}
+            goldResult={cell.gold_result}
+            stale={busy}
+          />
         </div>
       </div>
 
