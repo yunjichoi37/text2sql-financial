@@ -72,7 +72,7 @@ export default function HistoryPanel({ runs }) {
       align: 'center',
       renderCell: (c) =>
         c.mode === 'testset' ? (
-          <VerdictBadge verdict={c.match_verdict} />
+          <VerdictBadge verdict={c.match_verdict} softF1={c.soft_f1} />
         ) : (
           <span className="muted">—</span>
         ),

@@ -59,7 +59,7 @@ export default function Cell({ cell, onUpdate, onDelete }) {
             <span className="duration-tag">{(cell.duration_ms / 1000).toFixed(1)}s</span>
           )}
           <div className="cell-header-trailing">
-            {cell.mode === 'testset' && <VerdictBadge verdict={cell.match_verdict} />}
+            {cell.mode === 'testset' && <VerdictBadge verdict={cell.match_verdict} softF1={cell.soft_f1} />}
             <Button
               className={showInfo ? 'info-toggle active' : 'info-toggle'}
               variant="ghost"

@@ -34,7 +34,7 @@ export default function RunDetailDialog({ run, onClose }) {
                   {typeof run.duration_ms === 'number' && (
                     <span className="duration-tag">{(run.duration_ms / 1000).toFixed(1)}s</span>
                   )}
-                  {run.mode === 'testset' && <VerdictBadge verdict={run.match_verdict} />}
+                  {run.mode === 'testset' && <VerdictBadge verdict={run.match_verdict} softF1={run.soft_f1} />}
                 </div>
                 <CellResultBody
                   error={run.error}
