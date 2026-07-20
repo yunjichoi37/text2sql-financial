@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
-import { createCell, deleteCell, listCells, listTables, updateCell } from './api'
+import { createCell, deleteCell, listCellRuns, listCells, listTables, updateCell } from './api'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
 import TableView from './components/TableView'
@@ -52,10 +52,10 @@ const TABLE_ICON_COLOR = '#d97706'
 
 function App() {
   const [cells, setCells] = useState([])
+  const [cellRuns, setCellRuns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [view, setView] = useState('test')
-  const [scrollToId, setScrollToId] = useState(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [tables, setTables] = useState([])
   const [selectedTableName, setSelectedTableName] = useState(null)
@@ -66,6 +66,12 @@ function App() {
       .then(setCells)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    listCellRuns()
+      .then(setCellRuns)
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -82,28 +88,16 @@ function App() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => {
-    if (view !== 'history' && scrollToId != null) {
-      const el = document.getElementById(`cell-${scrollToId}`)
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setScrollToId(null)
-    }
-  }, [view, scrollToId, cells])
-
-  function handleHistorySelect(id) {
-    const target = cells.find((c) => c.id === id)
-    setView(target?.mode === 'freeform' ? 'query' : 'test')
-    setScrollToId(id)
-  }
-
   async function handleCreate(body) {
     const newCell = await createCell(body)
     setCells((prev) => [...prev, newCell])
+    listCellRuns().then(setCellRuns).catch(() => {})
   }
 
   async function handleUpdate(id, body) {
     const updated = await updateCell(id, body)
     setCells((prev) => prev.map((c) => (c.id === id ? updated : c)))
+    listCellRuns().then(setCellRuns).catch(() => {})
   }
 
   async function handleDelete(id) {
@@ -231,9 +225,7 @@ function App() {
               onDelete={handleDelete}
             />
           )}
-          {!loading && !error && view === 'history' && (
-            <HistoryPanel cells={cells} onSelect={handleHistorySelect} />
-          )}
+          {!loading && !error && view === 'history' && <HistoryPanel runs={cellRuns} />}
           {view === 'tables' && selectedTable && (
             <TableView
               key={selectedTable.name}

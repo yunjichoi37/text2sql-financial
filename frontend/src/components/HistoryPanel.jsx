@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Table, useTableSortableState, useTableSortable, proportional, pixel } from '@astryxdesign/core/Table'
+import RunDetailDialog from './RunDetailDialog'
 import VerdictBadge from './VerdictBadge'
 
 function useClickableRowPlugin(onSelect) {
@@ -10,7 +11,7 @@ function useClickableRowPlugin(onSelect) {
           ...props,
           htmlProps: {
             ...props.htmlProps,
-            onClick: () => onSelect(item.id),
+            onClick: () => onSelect(item),
             style: { ...props.htmlProps?.style, cursor: 'pointer' },
           },
         }
@@ -20,12 +21,14 @@ function useClickableRowPlugin(onSelect) {
   )
 }
 
-export default function HistoryPanel({ cells, onSelect }) {
+export default function HistoryPanel({ runs }) {
+  const [selectedRun, setSelectedRun] = useState(null)
+
   const { sortedData, sortConfig } = useTableSortableState({
-    data: cells,
-    defaultSort: [{ sortKey: 'updated_at', direction: 'descending' }],
+    data: runs,
+    defaultSort: [{ sortKey: 'created_at', direction: 'descending' }],
     comparators: {
-      updated_at: (a, b) => new Date(a.updated_at) - new Date(b.updated_at),
+      created_at: (a, b) => new Date(a.created_at) - new Date(b.created_at),
       mode: (a, b) => (a.mode === 'testset' ? '테스트' : '직접 질문').localeCompare(
         b.mode === 'testset' ? '테스트' : '직접 질문'
       ),
@@ -33,9 +36,9 @@ export default function HistoryPanel({ cells, onSelect }) {
     },
   })
   const sortPlugin = useTableSortable(sortConfig)
-  const clickableRowPlugin = useClickableRowPlugin(onSelect)
+  const clickableRowPlugin = useClickableRowPlugin(setSelectedRun)
 
-  if (cells.length === 0) {
+  if (runs.length === 0) {
     return <p className="muted">아직 실행 기록이 없습니다.</p>
   }
 
@@ -84,23 +87,26 @@ export default function HistoryPanel({ cells, onSelect }) {
         typeof c.duration_ms === 'number' ? `${(c.duration_ms / 1000).toFixed(1)}s` : '—',
     },
     {
-      key: 'updated_at',
+      key: 'created_at',
       header: '시각',
       sortable: true,
       width: proportional(1),
-      renderCell: (c) => new Date(c.updated_at).toLocaleString(),
+      renderCell: (c) => new Date(c.created_at).toLocaleString(),
     },
   ]
 
   return (
-    <Table
-      data={sortedData}
-      columns={columns}
-      idKey="id"
-      density="compact"
-      dividers="grid"
-      hasHover
-      plugins={{ sort: sortPlugin, click: clickableRowPlugin }}
-    />
+    <>
+      <Table
+        data={sortedData}
+        columns={columns}
+        idKey="id"
+        density="compact"
+        dividers="grid"
+        hasHover
+        plugins={{ sort: sortPlugin, click: clickableRowPlugin }}
+      />
+      <RunDetailDialog run={selectedRun} onClose={() => setSelectedRun(null)} />
+    </>
   )
 }

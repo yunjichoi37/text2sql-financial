@@ -121,6 +121,47 @@ def _insert_cell(*, mode, question, testset_question_id, evidence, difficulty, g
         conn.close()
 
 
+def _insert_cell_run(*, cell_id, mode, question, testset_question_id, evidence, difficulty,
+                      gold_sql, ai_sql, ai_answer, ai_result, gold_result, match_verdict, error,
+                      relevant_tables, intermediate_steps, duration_ms) -> None:
+    conn = get_conn()
+    try:
+        cur = dict_cursor(conn)
+        cur.execute(
+            """
+            INSERT INTO cell_runs (cell_id, mode, question, testset_question_id, evidence,
+                                    difficulty, gold_sql, ai_sql, ai_answer, ai_result,
+                                    gold_result, match_verdict, error, relevant_tables,
+                                    intermediate_steps, duration_ms)
+            VALUES (%(cell_id)s, %(mode)s, %(question)s, %(testset_question_id)s, %(evidence)s,
+                    %(difficulty)s, %(gold_sql)s, %(ai_sql)s, %(ai_answer)s, %(ai_result)s,
+                    %(gold_result)s, %(match_verdict)s, %(error)s, %(relevant_tables)s,
+                    %(intermediate_steps)s, %(duration_ms)s)
+            """,
+            {
+                "cell_id": cell_id,
+                "mode": mode,
+                "question": question,
+                "testset_question_id": testset_question_id,
+                "evidence": evidence,
+                "difficulty": difficulty,
+                "gold_sql": gold_sql,
+                "ai_sql": ai_sql,
+                "ai_answer": ai_answer,
+                "ai_result": _json_param(ai_result),
+                "gold_result": _json_param(gold_result),
+                "match_verdict": match_verdict,
+                "error": error,
+                "relevant_tables": _json_param(relevant_tables),
+                "intermediate_steps": _json_param(intermediate_steps),
+                "duration_ms": duration_ms,
+            },
+        )
+        cur.close()
+    finally:
+        conn.close()
+
+
 def _list_cells(mode: str | None) -> list[dict]:
     conn = get_conn()
     try:
@@ -223,6 +264,16 @@ def create_cell(payload: CellCreate):
         gold_sql=gold_sql,
         **exec_result,
     )
+    _insert_cell_run(
+        cell_id=row["id"],
+        mode=payload.mode,
+        question=question,
+        testset_question_id=payload.testset_question_id,
+        evidence=evidence,
+        difficulty=difficulty,
+        gold_sql=gold_sql,
+        **exec_result,
+    )
     return row
 
 
@@ -246,6 +297,16 @@ def update_cell(cell_id: int, payload: CellUpdate):
 
     exec_result = _execute_cell(existing["mode"], question, existing["gold_sql"])
     row = _update_cell(cell_id, question=question, **exec_result)
+    _insert_cell_run(
+        cell_id=cell_id,
+        mode=existing["mode"],
+        question=question,
+        testset_question_id=existing["testset_question_id"],
+        evidence=existing["evidence"],
+        difficulty=existing["difficulty"],
+        gold_sql=existing["gold_sql"],
+        **exec_result,
+    )
     return row
 
 

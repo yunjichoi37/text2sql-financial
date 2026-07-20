@@ -48,6 +48,27 @@ class CellOut(BaseModel):
     updated_at: datetime
 
 
+class CellRunOut(BaseModel):
+    id: int
+    cell_id: int | None = None
+    mode: str
+    question: str
+    testset_question_id: int | None = None
+    evidence: str | None = None
+    difficulty: str | None = None
+    gold_sql: str | None = None
+    ai_sql: str | None = None
+    ai_answer: str | None = None
+    ai_result: list[dict] | None = None
+    gold_result: list[dict] | None = None
+    match_verdict: bool | None = None
+    error: str | None = None
+    relevant_tables: list[str] | None = None
+    intermediate_steps: list[dict] | None = None
+    duration_ms: int | None = None
+    created_at: datetime
+
+
 class TableColumnInfo(BaseModel):
     type: str | None = None
     desc: str | None = None

@@ -203,6 +203,13 @@
   min-height: 0;
 }
 
+.run-detail-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .mode-tag {
   display: inline-block;
   font-size: 12px;

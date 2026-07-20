@@ -35,6 +35,10 @@ export function deleteCell(id) {
   return fetch(`/api/cells/${id}`, { method: 'DELETE' }).then(handle)
 }
 
+export function listCellRuns() {
+  return fetch('/api/cell-runs').then(handle)
+}
+
 export function listTestset() {
   return fetch('/api/testset').then(handle)
 }
