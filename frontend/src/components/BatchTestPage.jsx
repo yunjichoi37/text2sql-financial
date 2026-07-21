@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
-import { Table, pixel, proportional } from '@astryxdesign/core/Table'
+import {
+  Table,
+  pixel,
+  proportional,
+  useTableSortable,
+  useTableSortableState,
+} from '@astryxdesign/core/Table'
 import { createBatchRun, getBatchRun, listBatchRuns, listTestset } from '../api'
 import BatchRunDetail from './BatchRunDetail'
 
@@ -10,13 +16,15 @@ const HISTORY_COLUMNS = [
   {
     key: 'label',
     header: '라벨',
+    sortable: true,
     width: proportional(2),
     renderCell: (run) => run.label || `배치 #${run.id}`,
   },
-  { key: 'scope', header: '범위', width: pixel(120) },
+  { key: 'scope', header: '범위', sortable: true, width: pixel(120) },
   {
     key: 'status',
     header: '상태',
+    sortable: true,
     width: pixel(90),
     align: 'center',
     renderCell: (run) => (
@@ -28,6 +36,7 @@ const HISTORY_COLUMNS = [
   {
     key: 'ex_correct',
     header: 'EX',
+    sortable: true,
     width: pixel(90),
     align: 'center',
     renderCell: (run) =>
@@ -36,6 +45,7 @@ const HISTORY_COLUMNS = [
   {
     key: 'soft_f1_avg',
     header: 'Soft F1',
+    sortable: true,
     width: pixel(90),
     align: 'center',
     renderCell: (run) =>
@@ -44,6 +54,7 @@ const HISTORY_COLUMNS = [
   {
     key: 'duration_ms',
     header: '소요시간',
+    sortable: true,
     width: pixel(90),
     align: 'center',
     renderCell: (run) =>
@@ -52,10 +63,18 @@ const HISTORY_COLUMNS = [
   {
     key: 'started_at',
     header: '시각',
+    sortable: true,
     width: proportional(1),
     renderCell: (run) => new Date(run.started_at).toLocaleString(),
   },
 ]
+
+const HISTORY_COMPARATORS = {
+  started_at: (a, b) => new Date(a.started_at) - new Date(b.started_at),
+  ex_correct: (a, b) => (a.ex_correct ?? -1) - (b.ex_correct ?? -1),
+  soft_f1_avg: (a, b) => (a.soft_f1_avg ?? -1) - (b.soft_f1_avg ?? -1),
+  duration_ms: (a, b) => (a.duration_ms ?? -1) - (b.duration_ms ?? -1),
+}
 
 export default function BatchTestPage() {
   const [tab, setTab] = useState('run')
@@ -68,6 +87,12 @@ export default function BatchTestPage() {
 
   const [history, setHistory] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
+  const { sortedData: sortedHistory, sortConfig } = useTableSortableState({
+    data: history,
+    defaultSort: [{ sortKey: 'started_at', direction: 'descending' }],
+    comparators: HISTORY_COMPARATORS,
+  })
+  const historySortPlugin = useTableSortable(sortConfig)
 
   const [detailBatch, setDetailBatch] = useState(null)
 
@@ -200,13 +225,14 @@ export default function BatchTestPage() {
           )}
           {!historyLoading && history.length > 0 && (
             <Table
-              data={history}
+              data={sortedHistory}
               columns={HISTORY_COLUMNS}
               idKey="id"
               density="compact"
               dividers="grid"
               hasHover
               plugins={{
+                sort: historySortPlugin,
                 click: {
                   transformBodyRow(props, item) {
                     return {

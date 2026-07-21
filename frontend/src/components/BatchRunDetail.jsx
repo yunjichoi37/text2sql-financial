@@ -1,14 +1,21 @@
 import { useMemo, useState } from 'react'
-import { Table, pixel, proportional } from '@astryxdesign/core/Table'
+import {
+  Table,
+  pixel,
+  proportional,
+  useTableSortable,
+  useTableSortableState,
+} from '@astryxdesign/core/Table'
 import RunDetailDialog from './RunDetailDialog'
 import VerdictBadge from './VerdictBadge'
 
 const ITEM_COLUMNS = [
-  { key: 'seq', header: '#', width: pixel(64), align: 'center' },
-  { key: 'question', header: '질문', width: proportional(3) },
+  { key: 'seq', header: '#', sortable: true, width: pixel(64), align: 'center' },
+  { key: 'question', header: '질문', sortable: true, width: proportional(3) },
   {
     key: 'difficulty',
     header: '난이도',
+    sortable: true,
     width: pixel(90),
     align: 'center',
     renderCell: (item) => item.difficulty || '—',
@@ -16,6 +23,7 @@ const ITEM_COLUMNS = [
   {
     key: 'match_verdict',
     header: '결과',
+    sortable: true,
     width: pixel(90),
     align: 'center',
     renderCell: (item) => <VerdictBadge verdict={item.match_verdict} softF1={item.soft_f1} />,
@@ -23,12 +31,17 @@ const ITEM_COLUMNS = [
   {
     key: 'duration_ms',
     header: '소요시간',
+    sortable: true,
     width: pixel(80),
     align: 'center',
     renderCell: (item) =>
       typeof item.duration_ms === 'number' ? `${(item.duration_ms / 1000).toFixed(1)}s` : '—',
   },
 ]
+
+const ITEM_COMPARATORS = {
+  duration_ms: (a, b) => (a.duration_ms ?? -1) - (b.duration_ms ?? -1),
+}
 
 function useClickableRowPlugin(onSelect) {
   return useMemo(
@@ -58,6 +71,12 @@ export default function BatchRunDetail({ run, onBack }) {
   const clickableRowPlugin = useClickableRowPlugin(handleSelectItem)
   const config = run.config_snapshot
   const numberedItems = run.items.map((item, i) => ({ ...item, seq: i + 1 }))
+  const { sortedData: sortedItems, sortConfig } = useTableSortableState({
+    data: numberedItems,
+    defaultSort: [{ sortKey: 'seq', direction: 'ascending' }],
+    comparators: ITEM_COMPARATORS,
+  })
+  const itemSortPlugin = useTableSortable(sortConfig)
 
   return (
     <div className="batch-detail">
@@ -118,13 +137,13 @@ export default function BatchRunDetail({ run, onBack }) {
         <span className="row-count"> ({run.items.length}개)</span>
       </div>
       <Table
-        data={numberedItems}
+        data={sortedItems}
         columns={ITEM_COLUMNS}
         idKey="id"
         density="compact"
         dividers="grid"
         hasHover
-        plugins={{ click: clickableRowPlugin }}
+        plugins={{ sort: itemSortPlugin, click: clickableRowPlugin }}
       />
 
       <RunDetailDialog run={selectedItem} onClose={() => setSelectedItem(null)} />
