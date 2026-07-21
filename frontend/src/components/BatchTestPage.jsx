@@ -1,38 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Table, pixel, proportional } from '@astryxdesign/core/Table'
 import { createBatchRun, getBatchRun, listBatchRuns, listTestset } from '../api'
-import BatchRunDetailDialog from './BatchRunDetailDialog'
-import VerdictBadge from './VerdictBadge'
+import BatchRunDetail from './BatchRunDetail'
 
 const DIFFICULTY_OPTIONS = ['simple', 'moderate', 'challenging']
-
-const ITEM_COLUMNS = [
-  { key: 'seq', header: '#', width: pixel(64), align: 'center' },
-  { key: 'question', header: '질문', width: proportional(3) },
-  {
-    key: 'difficulty',
-    header: '난이도',
-    width: pixel(90),
-    align: 'center',
-    renderCell: (item) => item.difficulty || '—',
-  },
-  {
-    key: 'match_verdict',
-    header: '결과',
-    width: pixel(90),
-    align: 'center',
-    renderCell: (item) => <VerdictBadge verdict={item.match_verdict} softF1={item.soft_f1} />,
-  },
-  {
-    key: 'duration_ms',
-    header: '소요시간',
-    width: pixel(80),
-    align: 'center',
-    renderCell: (item) =>
-      typeof item.duration_ms === 'number' ? `${(item.duration_ms / 1000).toFixed(1)}s` : '—',
-  },
-]
 
 const HISTORY_COLUMNS = [
   {
@@ -93,12 +65,11 @@ export default function BatchTestPage() {
   const [label, setLabel] = useState('')
   const [starting, setStarting] = useState(false)
   const [startError, setStartError] = useState(null)
-  const [activeBatch, setActiveBatch] = useState(null)
-  const pollRef = useRef(null)
 
   const [history, setHistory] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
-  const [selectedRun, setSelectedRun] = useState(null)
+
+  const [detailBatch, setDetailBatch] = useState(null)
 
   useEffect(() => {
     listTestset()
@@ -120,32 +91,24 @@ export default function BatchTestPage() {
   }
 
   useEffect(() => {
-    if (tab === 'history') loadHistory()
+    if (tab === 'history' && !detailBatch) loadHistory()
+    // detailBatch intentionally excluded: history should only reload when returning to the list, not on every poll tick
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
 
+  // 상세 화면이 실행 중인 배치를 보고 있으면 완료될 때까지 계속 폴링한다.
   useEffect(() => {
-    return () => clearInterval(pollRef.current)
-  }, [])
-
-  function stopPolling() {
-    clearInterval(pollRef.current)
-    pollRef.current = null
-  }
-
-  function pollBatch(id) {
-    pollRef.current = setInterval(async () => {
+    if (!detailBatch || detailBatch.status !== 'running') return undefined
+    const id = detailBatch.id
+    const interval = setInterval(async () => {
       try {
-        const detail = await getBatchRun(id)
-        setActiveBatch(detail)
-        if (detail.status !== 'running') {
-          stopPolling()
-          if (tab === 'history') loadHistory()
-        }
+        setDetailBatch(await getBatchRun(id))
       } catch {
-        stopPolling()
+        clearInterval(interval)
       }
     }, 1500)
-  }
+    return () => clearInterval(interval)
+  }, [detailBatch?.id, detailBatch?.status])
 
   async function handleRun() {
     setStarting(true)
@@ -153,9 +116,7 @@ export default function BatchTestPage() {
     try {
       const body = { difficulty: selectedDifficulty, label: label.trim() || null }
       const created = await createBatchRun(body)
-      const detail = await getBatchRun(created.id)
-      setActiveBatch(detail)
-      pollBatch(created.id)
+      setDetailBatch(await getBatchRun(created.id))
     } catch (e) {
       setStartError(e.message)
     } finally {
@@ -163,10 +124,19 @@ export default function BatchTestPage() {
     }
   }
 
-  const progressPct =
-    activeBatch && activeBatch.total_count > 0
-      ? Math.round((activeBatch.completed_count / activeBatch.total_count) * 100)
-      : 0
+  async function openDetail(id) {
+    setDetailBatch(await getBatchRun(id))
+  }
+
+  function handleBack() {
+    setDetailBatch(null)
+    setTab('history')
+    loadHistory()
+  }
+
+  if (detailBatch) {
+    return <BatchRunDetail run={detailBatch} onBack={handleBack} />
+  }
 
   return (
     <div className="batch-page">
@@ -186,73 +156,39 @@ export default function BatchTestPage() {
       </div>
 
       {tab === 'run' && (
-        <div className="batch-run-tab">
-          <div className="batch-run-form">
-            <div className="difficulty-filter" role="group" aria-label="실행 범위">
-              <Button
-                size="sm"
-                variant={selectedDifficulty == null ? 'primary' : 'secondary'}
-                label="전체"
-                onClick={() => setSelectedDifficulty(null)}
-              />
-              {DIFFICULTY_OPTIONS.filter((d) => difficultyCounts[d]).map((d) => (
-                <Button
-                  key={d}
-                  size="sm"
-                  variant={selectedDifficulty === d ? 'primary' : 'secondary'}
-                  label={`${d} (${difficultyCounts[d]})`}
-                  onClick={() => setSelectedDifficulty(d)}
-                />
-              ))}
-            </div>
-            <input
-              type="text"
-              className="batch-label-input"
-              placeholder="라벨 (선택, 예: prompt-v2)"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-            />
+        <div className="batch-run-form">
+          <div className="difficulty-filter" role="group" aria-label="실행 범위">
             <Button
-              variant="primary"
-              label={activeBatch?.status === 'running' ? '실행 중...' : '실행'}
-              isDisabled={starting || activeBatch?.status === 'running'}
-              onClick={handleRun}
-              className="run-button"
+              size="sm"
+              variant={selectedDifficulty == null ? 'primary' : 'secondary'}
+              label="전체"
+              onClick={() => setSelectedDifficulty(null)}
             />
-            {startError && <div className="cell-error">에러: {startError}</div>}
+            {DIFFICULTY_OPTIONS.filter((d) => difficultyCounts[d]).map((d) => (
+              <Button
+                key={d}
+                size="sm"
+                variant={selectedDifficulty === d ? 'primary' : 'secondary'}
+                label={`${d} (${difficultyCounts[d]})`}
+                onClick={() => setSelectedDifficulty(d)}
+              />
+            ))}
           </div>
-
-          {activeBatch && (
-            <div className="batch-progress-block">
-              <div className="batch-progress-label">
-                {activeBatch.status === 'running' ? (
-                  <>
-                    <span className="spinner" /> 진행 중 — {activeBatch.completed_count}/
-                    {activeBatch.total_count}
-                  </>
-                ) : activeBatch.status === 'completed' ? (
-                  `완료 — EX ${activeBatch.ex_correct}/${activeBatch.total_count}, Soft F1 평균 ${
-                    activeBatch.soft_f1_avg != null ? Math.round(activeBatch.soft_f1_avg * 100) : 0
-                  }%`
-                ) : (
-                  `실패: ${activeBatch.error || '알 수 없는 에러'}`
-                )}
-              </div>
-              <div className="batch-progress-track">
-                <div className="batch-progress-fill" style={{ width: `${progressPct}%` }} />
-              </div>
-
-              {activeBatch.items.length > 0 && (
-                <Table
-                  data={activeBatch.items.map((item, i) => ({ ...item, seq: i + 1 }))}
-                  columns={ITEM_COLUMNS}
-                  idKey="id"
-                  density="compact"
-                  dividers="grid"
-                />
-              )}
-            </div>
-          )}
+          <input
+            type="text"
+            className="batch-label-input"
+            placeholder="라벨 (선택, 예: prompt-v2)"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+          />
+          <Button
+            variant="primary"
+            label={starting ? '실행 중...' : '실행'}
+            isDisabled={starting}
+            onClick={handleRun}
+            className="run-button"
+          />
+          {startError && <div className="cell-error">에러: {startError}</div>}
         </div>
       )}
 
@@ -277,7 +213,7 @@ export default function BatchTestPage() {
                       ...props,
                       htmlProps: {
                         ...props.htmlProps,
-                        onClick: () => getBatchRun(item.id).then(setSelectedRun),
+                        onClick: () => openDetail(item.id),
                         style: { ...props.htmlProps?.style, cursor: 'pointer' },
                       },
                     }
@@ -286,7 +222,6 @@ export default function BatchTestPage() {
               }}
             />
           )}
-          <BatchRunDetailDialog run={selectedRun} onClose={() => setSelectedRun(null)} />
         </div>
       )}
     </div>
