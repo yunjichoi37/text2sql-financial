@@ -2,18 +2,8 @@ import { useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
-import {
-  createCell,
-  deleteCell,
-  getBatchRun,
-  listCellRuns,
-  listCells,
-  listTables,
-  updateCell,
-} from './api'
-import BatchHistoryPage from './components/BatchHistoryPage'
-import BatchRunDetail from './components/BatchRunDetail'
-import BatchRunPage from './components/BatchRunPage'
+import { createCell, deleteCell, listCellRuns, listCells, listTables, updateCell } from './api'
+import BatchTestPage from './components/BatchTestPage'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
 import TableView from './components/TableView'
@@ -57,21 +47,16 @@ const NAV_ITEMS = [
     iconPath: 'M12 8v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
   },
   {
-    id: 'batch-run',
-    label: '새 테스트',
+    id: 'batch',
+    label: '통합 테스트',
     description: '테스트셋 전체(또는 난이도별)를 한 번에 실행해 정확도와 소요시간을 비교합니다.',
-  },
-  {
-    id: 'batch-history',
-    label: '통합 히스토리',
-    description: '지금까지 실행한 통합 테스트 결과를 모아봅니다.',
+    color: '#dc2626',
+    iconPath: 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
   },
 ]
 
 const TABLE_ICON_PATH = 'M4 5h16v14H4z M4 10h16 M4 15h16 M10 5v14'
 const TABLE_ICON_COLOR = '#d97706'
-const BATCH_ICON_PATH = 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'
-const BATCH_ICON_COLOR = '#dc2626'
 
 function App() {
   const [cells, setCells] = useState([])
@@ -83,7 +68,6 @@ function App() {
   const [tables, setTables] = useState([])
   const [selectedTableName, setSelectedTableName] = useState(null)
   const [selectedTableRowCount, setSelectedTableRowCount] = useState(null)
-  const [detailBatch, setDetailBatch] = useState(null)
 
   useEffect(() => {
     listCells()
@@ -111,35 +95,6 @@ function App() {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
-
-  // 통합 테스트 상세 화면이 실행 중인 배치를 보고 있으면 완료될 때까지 계속 폴링한다.
-  useEffect(() => {
-    if (!detailBatch || detailBatch.status !== 'running') return undefined
-    const id = detailBatch.id
-    const interval = setInterval(async () => {
-      try {
-        setDetailBatch(await getBatchRun(id))
-      } catch {
-        clearInterval(interval)
-      }
-    }, 1500)
-    return () => clearInterval(interval)
-  }, [detailBatch?.id, detailBatch?.status])
-
-  async function openBatchDetail(id) {
-    setDetailBatch(await getBatchRun(id))
-    setView('batch-history')
-  }
-
-  function closeBatchDetail() {
-    setDetailBatch(null)
-    setView('batch-history')
-  }
-
-  function selectBatchTab(id) {
-    setDetailBatch(null)
-    setView(id)
-  }
 
   async function handleCreate(body) {
     const newCell = await createCell(body)
@@ -212,7 +167,7 @@ function App() {
             </SideNavItem>
           )}
 
-          {NAV_ITEMS.filter((item) => item.id === 'history').map((item) => (
+          {NAV_ITEMS.filter((item) => item.id === 'history' || item.id === 'batch').map((item) => (
             <SideNavItem
               key={item.id}
               label={item.label}
@@ -221,57 +176,43 @@ function App() {
               onClick={() => setView(item.id)}
             />
           ))}
-
-          <SideNavItem
-            label="통합 테스트"
-            icon={<IconIndicator color={BATCH_ICON_COLOR} d={BATCH_ICON_PATH} />}
-            collapsible={{ defaultIsCollapsed: false }}
-          >
-            <SideNavItem
-              label="새 테스트"
-              isSelected={view === 'batch-run'}
-              onClick={() => selectBatchTab('batch-run')}
-            />
-            <SideNavItem
-              label="통합 히스토리"
-              isSelected={view === 'batch-history'}
-              onClick={() => selectBatchTab('batch-history')}
-            />
-          </SideNavItem>
         </SideNavSection>
       </SideNav>
 
       <main className="main">
         <div className="main-inner">
           <header className="page-header">
-            <div className="breadcrumb">
-              <span>Home</span>
-              <span>/</span>
-              {view === 'tables' ? (
-                <>
-                  <span>테이블</span>
-                  {selectedTableName && (
-                    <>
-                      <span>/</span>
-                      <span className="crumb-current">{selectedTableName}</span>
-                    </>
-                  )}
-                </>
-              ) : (
-                <span className="crumb-current">{current.label}</span>
-              )}
+            <div className="page-header-text">
+              <div className="breadcrumb">
+                <span>Home</span>
+                <span>/</span>
+                {view === 'tables' ? (
+                  <>
+                    <span>테이블</span>
+                    {selectedTableName && (
+                      <>
+                        <span>/</span>
+                        <span className="crumb-current">{selectedTableName}</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <span className="crumb-current">{current.label}</span>
+                )}
+              </div>
+              <h1>
+                {view === 'tables' ? selectedTableName || '테이블' : current.label}
+                {view === 'tables' && selectedTableRowCount != null && (
+                  <span className="row-count-label"> {selectedTableRowCount} rows</span>
+                )}
+              </h1>
+              <p className="page-desc">
+                {view === 'tables'
+                  ? selectedTable?.summary || '왼쪽 사이드바에서 테이블을 선택하면 데이터를 확인할 수 있습니다.'
+                  : current.description}
+              </p>
             </div>
-            <h1>
-              {view === 'tables' ? selectedTableName || '테이블' : current.label}
-              {view === 'tables' && selectedTableRowCount != null && (
-                <span className="row-count-label"> {selectedTableRowCount} rows</span>
-              )}
-            </h1>
-            <p className="page-desc">
-              {view === 'tables'
-                ? selectedTable?.summary || '왼쪽 사이드바에서 테이블을 선택하면 데이터를 확인할 수 있습니다.'
-                : current.description}
-            </p>
+            <div id="page-header-actions" className="page-header-actions" />
           </header>
 
           {loading && <p className="muted">불러오는 중...</p>}
@@ -296,15 +237,7 @@ function App() {
             />
           )}
           {!loading && !error && view === 'history' && <HistoryPanel runs={cellRuns} />}
-          {!loading && !error && detailBatch && (view === 'batch-run' || view === 'batch-history') && (
-            <BatchRunDetail run={detailBatch} onBack={closeBatchDetail} />
-          )}
-          {!loading && !error && !detailBatch && view === 'batch-run' && (
-            <BatchRunPage onCreated={openBatchDetail} />
-          )}
-          {!loading && !error && !detailBatch && view === 'batch-history' && (
-            <BatchHistoryPage onSelect={openBatchDetail} />
-          )}
+          {!loading && !error && view === 'batch' && <BatchTestPage />}
           {view === 'tables' && selectedTable && (
             <TableView
               key={selectedTable.name}

@@ -181,7 +181,19 @@ body {
 }
 
 .page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 28px;
+}
+
+.page-header-text {
+  min-width: 0;
+}
+
+.page-header-actions:empty {
+  display: none;
 }
 
 .page-header h1 {
