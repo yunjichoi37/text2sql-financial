@@ -113,7 +113,7 @@ def _finalize_batch_run(batch_run_id: int, duration_ms: int) -> None:
                 ex_correct = sub.ex_correct, soft_f1_avg = sub.soft_f1_avg
             FROM (
                 SELECT COUNT(*) FILTER (WHERE match_verdict) AS ex_correct,
-                       AVG(soft_f1) AS soft_f1_avg
+                       AVG(COALESCE(soft_f1, 0)) AS soft_f1_avg
                 FROM batch_run_items
                 WHERE batch_run_id = %(id)s
             ) AS sub
