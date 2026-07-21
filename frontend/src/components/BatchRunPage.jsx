@@ -2,10 +2,30 @@ import { useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { createBatchRun, listTestset } from '../api'
 
-const DIFFICULTY_OPTIONS = ['simple', 'moderate', 'challenging']
+const DIFFICULTY_ORDER = ['simple', 'moderate', 'challenging']
+const DIFFICULTY_DOT_COLOR = {
+  simple: 'var(--pass-text)',
+  moderate: '#d97706',
+  challenging: 'var(--fail-text)',
+}
+
+function DifficultyDot({ difficulty }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: 7,
+        height: 7,
+        borderRadius: '50%',
+        background: DIFFICULTY_DOT_COLOR[difficulty],
+      }}
+    />
+  )
+}
 
 export default function BatchRunPage({ onCreated }) {
   const [difficultyCounts, setDifficultyCounts] = useState({})
+  const [totalCount, setTotalCount] = useState(0)
   const [selectedDifficulty, setSelectedDifficulty] = useState(null)
   const [label, setLabel] = useState('')
   const [starting, setStarting] = useState(false)
@@ -19,9 +39,12 @@ export default function BatchRunPage({ onCreated }) {
           counts[q.difficulty] = (counts[q.difficulty] || 0) + 1
         }
         setDifficultyCounts(counts)
+        setTotalCount(questions.length)
       })
       .catch(() => {})
   }, [])
+
+  const availableDifficulties = DIFFICULTY_ORDER.filter((d) => difficultyCounts[d])
 
   async function handleRun() {
     setStarting(true)
@@ -39,23 +62,6 @@ export default function BatchRunPage({ onCreated }) {
 
   return (
     <div className="batch-run-form">
-      <div className="difficulty-filter" role="group" aria-label="실행 범위">
-        <Button
-          size="sm"
-          variant={selectedDifficulty == null ? 'primary' : 'secondary'}
-          label="전체"
-          onClick={() => setSelectedDifficulty(null)}
-        />
-        {DIFFICULTY_OPTIONS.filter((d) => difficultyCounts[d]).map((d) => (
-          <Button
-            key={d}
-            size="sm"
-            variant={selectedDifficulty === d ? 'primary' : 'secondary'}
-            label={`${d} (${difficultyCounts[d]})`}
-            onClick={() => setSelectedDifficulty(d)}
-          />
-        ))}
-      </div>
       <input
         type="text"
         className="batch-label-input"
@@ -63,6 +69,24 @@ export default function BatchRunPage({ onCreated }) {
         value={label}
         onChange={(e) => setLabel(e.target.value)}
       />
+      <div className="difficulty-filter" role="group" aria-label="실행 범위">
+        <Button
+          size="md"
+          variant={selectedDifficulty == null ? 'primary' : 'secondary'}
+          label={`전체 (${totalCount})`}
+          onClick={() => setSelectedDifficulty(null)}
+        />
+        {availableDifficulties.map((d) => (
+          <Button
+            key={d}
+            size="md"
+            variant={selectedDifficulty === d ? 'primary' : 'secondary'}
+            label={`${d} (${difficultyCounts[d]})`}
+            icon={<DifficultyDot difficulty={d} />}
+            onClick={() => setSelectedDifficulty(selectedDifficulty === d ? null : d)}
+          />
+        ))}
+      </div>
       <Button
         variant="primary"
         label={starting ? '실행 중...' : '실행'}
