@@ -598,18 +598,6 @@
   background: var(--row-hover);
 }
 
-.batch-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  text-align: left;
-}
-
-.batch-tabs {
-  display: flex;
-  gap: 6px;
-}
-
 .batch-run-form {
   display: flex;
   flex-direction: column;
