@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   Table,
   pixel,
@@ -63,6 +63,25 @@ function useClickableRowPlugin(onSelect) {
 
 export default function BatchRunDetail({ run, onBack }) {
   const [selectedItem, setSelectedItem] = useState(null)
+  const isAtBottomRef = useRef(true)
+  const prevItemCountRef = useRef(run.items.length)
+
+  useEffect(() => {
+    function handleScroll() {
+      const distanceToBottom =
+        document.documentElement.scrollHeight - (window.scrollY + window.innerHeight)
+      isAtBottomRef.current = distanceToBottom < 32
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (run.items.length > prevItemCountRef.current && isAtBottomRef.current) {
+      window.scrollTo(0, document.documentElement.scrollHeight)
+    }
+    prevItemCountRef.current = run.items.length
+  }, [run.items.length])
 
   function handleSelectItem(item) {
     setSelectedItem({ ...item, mode: 'testset' })

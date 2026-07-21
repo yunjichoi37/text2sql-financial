@@ -15,12 +15,16 @@ import BatchRunForm from './BatchRunForm'
 const HISTORY_COLUMNS = [
   {
     key: 'label',
-    header: '라벨',
+    header: '테스트명',
     sortable: true,
-    width: proportional(2),
+    width: proportional(1),
     renderCell: (run) => run.label || `배치 #${run.id}`,
   },
-  { key: 'scope', header: '범위', sortable: true, width: pixel(120) },
+  { 
+    key: 'scope', 
+    header: '범위', 
+    sortable: true, 
+    width: pixel(300) },
   {
     key: 'status',
     header: '상태',
@@ -64,7 +68,9 @@ const HISTORY_COLUMNS = [
     key: 'started_at',
     header: '시각',
     sortable: true,
+    // width: pixel(150),
     width: proportional(1),
+    align: 'center',
     renderCell: (run) => new Date(run.started_at).toLocaleString(),
   },
 ]

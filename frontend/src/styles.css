@@ -609,6 +609,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
+  min-height: 0;
 }
 
 .batch-label-input {
@@ -624,10 +626,17 @@
 }
 
 .batch-question-list {
+  flex: 1;
+  min-height: 0;
   max-height: 320px;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-element, var(--radius-sm));
+}
+
+/* CheckboxListItem의 자체 :last-child 구분선 제거 스타일이 적용되지 않아 직접 오버라이드 */
+.batch-question-list li:last-child {
+  border-bottom: none !important;
 }
 
 .batch-question-label {
