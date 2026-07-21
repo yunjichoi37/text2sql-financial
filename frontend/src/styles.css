@@ -598,7 +598,119 @@
   background: var(--row-hover);
 }
 
+.batch-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.batch-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.batch-run-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.batch-label-input {
+  width: 100%;
+  max-width: 360px;
+  font: inherit;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-h);
+  transition: border-color 0.12s ease;
+}
+
+.batch-label-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.batch-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.batch-progress-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.batch-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.batch-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.batch-status-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.batch-status-tag.batch-status-running {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.batch-status-tag.batch-status-completed {
+  background: var(--pass-bg);
+  color: var(--pass-text);
+}
+
+.batch-status-tag.batch-status-failed {
+  background: var(--fail-bg);
+  color: var(--fail-text);
+}
+
+.batch-config-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.batch-config-grid dt {
+  color: var(--text);
+  opacity: 0.6;
+}
+
+.batch-config-grid dd {
+  margin: 0;
+  color: var(--text-h);
+}
+
 @media (prefers-color-scheme: dark) {
+  .batch-status-tag.batch-status-running {
+    background: rgba(37, 99, 235, 0.15);
+    color: #93c5fd;
+    border-color: rgba(37, 99, 235, 0.4);
+  }
+
   .mode-tag.mode-testset {
     background: rgba(37, 99, 235, 0.15);
     color: #93c5fd;

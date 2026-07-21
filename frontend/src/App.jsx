@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
 import { createCell, deleteCell, listCellRuns, listCells, listTables, updateCell } from './api'
+import BatchTestPage from './components/BatchTestPage'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
 import TableView from './components/TableView'
@@ -44,6 +45,13 @@ const NAV_ITEMS = [
     description: '지금까지 실행한 질문과 결과를 모아봅니다.',
     color: '#0d9488',
     iconPath: 'M12 8v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z',
+  },
+  {
+    id: 'batch',
+    label: '통합 테스트',
+    description: '테스트셋 전체(또는 난이도별)를 한 번에 실행해 정확도와 소요시간을 비교합니다.',
+    color: '#dc2626',
+    iconPath: 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
   },
 ]
 
@@ -159,7 +167,7 @@ function App() {
             </SideNavItem>
           )}
 
-          {NAV_ITEMS.filter((item) => item.id === 'history').map((item) => (
+          {NAV_ITEMS.filter((item) => item.id === 'history' || item.id === 'batch').map((item) => (
             <SideNavItem
               key={item.id}
               label={item.label}
@@ -226,6 +234,7 @@ function App() {
             />
           )}
           {!loading && !error && view === 'history' && <HistoryPanel runs={cellRuns} />}
+          {!loading && !error && view === 'batch' && <BatchTestPage />}
           {view === 'tables' && selectedTable && (
             <TableView
               key={selectedTable.name}

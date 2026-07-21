@@ -47,6 +47,22 @@ export function listTables() {
   return fetch('/api/tables').then(handle)
 }
 
+export function createBatchRun(body) {
+  return fetch('/api/batch-runs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(handle)
+}
+
+export function listBatchRuns() {
+  return fetch('/api/batch-runs').then(handle)
+}
+
+export function getBatchRun(id) {
+  return fetch(`/api/batch-runs/${id}`).then(handle)
+}
+
 export function getTableRows(tableName, page, pageSize) {
   return fetch(`/api/tables/${tableName}/rows?page=${page}&page_size=${pageSize}`).then(handle)
 }
