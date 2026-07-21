@@ -136,6 +136,11 @@ function App() {
     setView('batch-history')
   }
 
+  function selectBatchTab(id) {
+    setDetailBatch(null)
+    setView(id)
+  }
+
   async function handleCreate(body) {
     const newCell = await createCell(body)
     setCells((prev) => [...prev, newCell])
@@ -225,12 +230,12 @@ function App() {
             <SideNavItem
               label="새 테스트"
               isSelected={view === 'batch-run'}
-              onClick={() => setView('batch-run')}
+              onClick={() => selectBatchTab('batch-run')}
             />
             <SideNavItem
               label="통합 히스토리"
               isSelected={view === 'batch-history'}
-              onClick={() => setView('batch-history')}
+              onClick={() => selectBatchTab('batch-history')}
             />
           </SideNavItem>
         </SideNavSection>
