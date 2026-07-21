@@ -72,8 +72,14 @@ class CellRunOut(BaseModel):
 
 
 class BatchRunCreate(BaseModel):
-    difficulty: str | None = None
+    question_ids: list[int]
     label: str | None = None
+
+    @model_validator(mode="after")
+    def validate_question_ids(self):
+        if not self.question_ids:
+            raise ValueError("question_ids는 최소 1개 이상이어야 합니다.")
+        return self
 
 
 class BatchRunItemOut(BaseModel):

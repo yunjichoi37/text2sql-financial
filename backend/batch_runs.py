@@ -1,5 +1,6 @@
 # backend/batch_runs.py : 테스트셋 통합 실행(batch run) 오케스트레이션 + 조회 라우터
 import time
+from collections import Counter
 
 import psycopg2.extras
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -8,7 +9,13 @@ from agent_core import get_current_config
 from backend.cells import execute_cell
 from backend.db import dict_cursor, get_conn
 from backend.schemas import BatchRunCreate, BatchRunDetailOut, BatchRunOut
-from backend.testset import list_testset_items
+from backend.testset import list_testset_items_by_ids
+
+
+def _build_scope_label(items: list[dict]) -> str:
+    counts = Counter(item.get("difficulty") or "미분류" for item in items)
+    breakdown = ", ".join(f"{difficulty} {count}" for difficulty, count in counts.items())
+    return f"{len(items)}문항 ({breakdown})"
 
 router = APIRouter(prefix="/api/batch-runs", tags=["batch_runs"])
 
@@ -176,11 +183,11 @@ def _run_batch(batch_run_id: int, items: list[dict]) -> None:
 
 @router.post("", response_model=BatchRunOut, status_code=201)
 def create_batch_run(payload: BatchRunCreate, background_tasks: BackgroundTasks):
-    items = list_testset_items(payload.difficulty)
+    items = list_testset_items_by_ids(payload.question_ids)
     if not items:
-        raise HTTPException(400, "조건에 맞는 테스트셋 문항이 없습니다.")
+        raise HTTPException(400, "선택된 테스트셋 문항을 찾을 수 없습니다.")
 
-    scope = f"difficulty:{payload.difficulty}" if payload.difficulty else "all"
+    scope = _build_scope_label(items)
     config_snapshot = get_current_config()
     row = _insert_batch_run(payload.label, scope, len(items), config_snapshot)
     background_tasks.add_task(_run_batch, row["id"], items)

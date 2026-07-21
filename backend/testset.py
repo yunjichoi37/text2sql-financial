@@ -26,12 +26,10 @@ def get_testset_question(question_id: int) -> dict | None:
     return None
 
 
-def list_testset_items(difficulty: str | None = None) -> list[dict]:
-    """배치 실행용: gold SQL을 포함한 전체 항목을 (선택적으로 난이도 필터해) 반환한다."""
-    items = load_testset()
-    if difficulty:
-        items = [item for item in items if item.get("difficulty") == difficulty]
-    return items
+def list_testset_items_by_ids(question_ids: list[int]) -> list[dict]:
+    """배치 실행용: 지정된 question_id들의 항목(gold SQL 포함)을 반환한다."""
+    id_set = set(question_ids)
+    return [item for item in load_testset() if item["question_id"] in id_set]
 
 
 @router.get("")
