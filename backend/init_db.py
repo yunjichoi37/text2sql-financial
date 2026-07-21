@@ -93,6 +93,53 @@ FROM cells c
 WHERE NOT EXISTS (SELECT 1 FROM cell_runs cr WHERE cr.cell_id = c.id);
 """
 
+CREATE_TABLE_BATCH_RUNS_SQL = """
+CREATE TABLE IF NOT EXISTS batch_runs (
+    id              SERIAL PRIMARY KEY,
+    label           TEXT,
+    scope           TEXT NOT NULL DEFAULT 'all',
+    status          TEXT NOT NULL DEFAULT 'running'
+                        CHECK (status IN ('running','completed','failed')),
+    total_count     INTEGER NOT NULL,
+    completed_count INTEGER NOT NULL DEFAULT 0,
+    ex_correct      INTEGER,
+    soft_f1_avg     DOUBLE PRECISION,
+    config_snapshot JSONB,
+    duration_ms     INTEGER,
+    error           TEXT,
+    started_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at     TIMESTAMPTZ
+);
+"""
+
+CREATE_TABLE_BATCH_RUN_ITEMS_SQL = """
+CREATE TABLE IF NOT EXISTS batch_run_items (
+    id                    SERIAL PRIMARY KEY,
+    batch_run_id          INTEGER NOT NULL REFERENCES batch_runs(id) ON DELETE CASCADE,
+    testset_question_id   INTEGER NOT NULL,
+    question              TEXT NOT NULL,
+    evidence              TEXT,
+    difficulty            TEXT,
+    gold_sql              TEXT,
+    ai_sql                TEXT,
+    ai_answer             TEXT,
+    ai_result             JSONB,
+    gold_result           JSONB,
+    match_verdict         BOOLEAN,
+    soft_f1               DOUBLE PRECISION,
+    error                 TEXT,
+    relevant_tables       JSONB,
+    intermediate_steps    JSONB,
+    duration_ms           INTEGER,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+"""
+
+CREATE_INDEX_BATCH_RUNS_SQL = """
+CREATE INDEX IF NOT EXISTS idx_batch_run_items_batch_run_id ON batch_run_items (batch_run_id);
+CREATE INDEX IF NOT EXISTS idx_batch_runs_started_at ON batch_runs (started_at);
+"""
+
 
 def main() -> None:
     conn = psycopg2.connect(DATABASE_URL)
@@ -108,8 +155,11 @@ def main() -> None:
         cur.execute(CREATE_INDEX_CELL_RUNS_SQL)
         cur.execute(MIGRATE_ADD_CELL_RUNS_SOFT_F1_COLUMN_SQL)
         cur.execute(BACKFILL_CELL_RUNS_SQL)
+        cur.execute(CREATE_TABLE_BATCH_RUNS_SQL)
+        cur.execute(CREATE_TABLE_BATCH_RUN_ITEMS_SQL)
+        cur.execute(CREATE_INDEX_BATCH_RUNS_SQL)
         cur.close()
-        print("cells / cell_runs 테이블 준비 완료")
+        print("cells / cell_runs / batch_runs / batch_run_items 테이블 준비 완료")
     finally:
         conn.close()
 

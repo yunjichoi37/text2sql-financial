@@ -26,6 +26,14 @@ def get_testset_question(question_id: int) -> dict | None:
     return None
 
 
+def list_testset_items(difficulty: str | None = None) -> list[dict]:
+    """배치 실행용: gold SQL을 포함한 전체 항목을 (선택적으로 난이도 필터해) 반환한다."""
+    items = load_testset()
+    if difficulty:
+        items = [item for item in items if item.get("difficulty") == difficulty]
+    return items
+
+
 @router.get("")
 def list_testset() -> list[dict]:
     return [

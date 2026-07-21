@@ -71,6 +71,52 @@ class CellRunOut(BaseModel):
     created_at: datetime
 
 
+class BatchRunCreate(BaseModel):
+    difficulty: str | None = None
+    label: str | None = None
+
+
+class BatchRunItemOut(BaseModel):
+    id: int
+    batch_run_id: int
+    testset_question_id: int
+    question: str
+    evidence: str | None = None
+    difficulty: str | None = None
+    gold_sql: str | None = None
+    ai_sql: str | None = None
+    ai_answer: str | None = None
+    ai_result: list[dict] | None = None
+    gold_result: list[dict] | None = None
+    match_verdict: bool | None = None
+    soft_f1: float | None = None
+    error: str | None = None
+    relevant_tables: list[str] | None = None
+    intermediate_steps: list[dict] | None = None
+    duration_ms: int | None = None
+    created_at: datetime
+
+
+class BatchRunOut(BaseModel):
+    id: int
+    label: str | None = None
+    scope: str
+    status: str
+    total_count: int
+    completed_count: int
+    ex_correct: int | None = None
+    soft_f1_avg: float | None = None
+    config_snapshot: dict | None = None
+    duration_ms: int | None = None
+    error: str | None = None
+    started_at: datetime
+    finished_at: datetime | None = None
+
+
+class BatchRunDetailOut(BatchRunOut):
+    items: list[BatchRunItemOut]
+
+
 class TableColumnInfo(BaseModel):
     type: str | None = None
     desc: str | None = None

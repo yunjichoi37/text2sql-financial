@@ -95,6 +95,9 @@ def get_extracted_tables() -> list[str]:
 ALL_TABLES: list[str] = get_extracted_tables()
 
 
+MODEL_NAME = "gemini-2.5-flash"
+TEMPERATURE = 0
+
 # LLM singleton
 _llm: ChatVertexAI | None = None
 def get_llm() -> ChatVertexAI:
@@ -102,12 +105,24 @@ def get_llm() -> ChatVertexAI:
     global _llm
     if _llm is None:
         _llm = ChatVertexAI(
-            model_name="gemini-2.5-flash",
+            model_name=MODEL_NAME,
             project=GCP_PROJECT,
             location=GCP_LOCATION,
-            temperature=0,
+            temperature=TEMPERATURE,
         )
     return _llm
+
+
+def get_current_config() -> dict:
+    """배치 실행 시점에 스냅샷으로 저장할, 실행 전반에 걸쳐 고정인 에이전트 설정."""
+    return {
+        "model_name": MODEL_NAME,
+        "temperature": TEMPERATURE,
+        "agent_prefix": AGENT_PREFIX,
+        "query_reminder": QUERY_REMINDER,
+        "use_table_filtering": USE_TABLE_FILTERING,
+        "max_rows_in_context": MAX_ROWS_IN_CONTEXT,
+    }
 
 
 def make_execute_sql_query_tool(results_holder: dict):
