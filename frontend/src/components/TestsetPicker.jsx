@@ -5,7 +5,7 @@ import { listTestset } from '../api'
 const DIFFICULTY_ORDER = ['simple', 'moderate', 'challenging']
 const DIFFICULTY_DOT_COLOR = {
   simple: 'var(--pass-text)',
-  moderate: '#d97706',
+  moderate: '#FFC000',
   challenging: 'var(--fail-text)',
 }
 

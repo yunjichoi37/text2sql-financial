@@ -542,7 +542,7 @@
 
 .difficulty-chip.difficulty-moderate {
   background: #fffbeb;
-  color: #d97706;
+  color: #ffc000;
 }
 
 .difficulty-chip.difficulty-challenging {
@@ -627,7 +627,7 @@
   max-height: 320px;
   overflow-y: auto;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-element, var(--radius-sm));
 }
 
 .batch-question-label {
@@ -749,7 +749,7 @@
   }
 
   .difficulty-chip.difficulty-moderate {
-    background: rgba(217, 119, 6, 0.2);
-    color: #fbbf24;
+    background: rgba(255, 192, 0, 0.15);
+    color: #ffc000;
   }
 }
