@@ -24,11 +24,11 @@ def _extract_last_sql(intermediate_steps: list[dict]) -> str | None:
     return None
 
 
-def execute_cell(mode: str, question: str, gold_sql: str | None) -> dict:
+def execute_cell(mode: str, question: str, gold_sql: str | None, evidence: str | None = None) -> dict:
     """agent_core.run_query 실행 + (testset이면) 정답 SQL 실행/비교까지 수행하고
     cells 테이블에 반영할 필드 dict를 반환한다."""
     start = time.perf_counter()
-    result = run_query(question)
+    result = run_query(question, evidence)
     duration_ms = round((time.perf_counter() - start) * 1000)
     relevant_tables = result.get("relevant_tables")
     intermediate_steps = result.get("intermediate_steps")
@@ -262,7 +262,7 @@ def create_cell(payload: CellCreate):
         question = payload.question
         evidence = difficulty = gold_sql = None
 
-    exec_result = execute_cell(payload.mode, question, gold_sql)
+    exec_result = execute_cell(payload.mode, question, gold_sql, evidence)
 
     row = _insert_cell(
         mode=payload.mode,
@@ -304,7 +304,7 @@ def update_cell(cell_id: int, payload: CellUpdate):
     else:
         question = existing["question"]
 
-    exec_result = execute_cell(existing["mode"], question, existing["gold_sql"])
+    exec_result = execute_cell(existing["mode"], question, existing["gold_sql"], existing["evidence"])
     row = _update_cell(cell_id, question=question, **exec_result)
     _insert_cell_run(
         cell_id=cell_id,

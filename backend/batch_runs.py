@@ -144,7 +144,7 @@ def _run_batch(batch_run_id: int, items: list[dict]) -> None:
     try:
         for item in items:
             try:
-                exec_result = execute_cell("testset", item["question"], item["SQL"])
+                exec_result = execute_cell("testset", item["question"], item["SQL"], item.get("evidence"))
                 _insert_batch_run_item(
                     batch_run_id=batch_run_id,
                     testset_question_id=item["question_id"],
