@@ -708,28 +708,28 @@
   text-align: left;
 }
 
-.batch-back-link {
-  align-self: flex-start;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 12px;
-  cursor: pointer;
-}
-
-.batch-back-link:hover {
-  text-decoration: underline;
-}
-
 .batch-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.batch-detail-header-title {
   display: flex;
   align-items: baseline;
   gap: 12px;
-  margin-bottom: 12px;
+}
+
+.batch-back-button {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding-right: 17px;
+}
+
+.batch-back-button:hover {
+  background: var(--code-bg);
 }
 
 .batch-detail-header h2 {

@@ -6,6 +6,8 @@ import {
   useTableSortable,
   useTableSortableState,
 } from '@astryxdesign/core/Table'
+import { Button } from '@astryxdesign/core/Button'
+import { Icon } from '@astryxdesign/core/Icon'
 import RunDetailDialog from './RunDetailDialog'
 import VerdictBadge from './VerdictBadge'
 
@@ -99,13 +101,19 @@ export default function BatchRunDetail({ run, onBack }) {
 
   return (
     <div className="batch-detail">
-      <button type="button" className="batch-back-link" onClick={onBack}>
-        ← 목록으로
-      </button>
-
       <div className="batch-detail-header">
-        <h2>{run.label || `배치 #${run.id}`}</h2>
-        <span className="muted">{new Date(run.started_at).toLocaleString()}</span>
+        <div className="batch-detail-header-title">
+          <h2>{run.label || `배치 #${run.id}`}</h2>
+          <span className="muted">{new Date(run.started_at).toLocaleString()}</span>
+        </div>
+        <Button
+          className="batch-back-button"
+          variant="secondary"
+          size="lg"
+          label="목록으로"
+          icon={<Icon icon="chevronLeft" />}
+          onClick={onBack}
+        />
       </div>
 
       <div className="run-detail-meta">

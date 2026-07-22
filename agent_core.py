@@ -261,7 +261,7 @@ def load_metadata_for_query(user_input: str) -> tuple[list[str], str, str]:
 def run_query(user_input: str, evidence: str | None = None) -> dict:
     """
     사용자 질문 하나를 처리하고 결과 dict를 반환한다.
-    evidence는 호출부 호환을 위해 받기만 하고, 질문/프롬프트 어디에도 반영하지 않는다.
+    evidence는 호출부 호환을 위해 받기만 하고, 아직 질문/프롬프트 반영하지 않는다.
     """
     relevant_tables, table_meta, rel_meta = load_metadata_for_query(user_input)
 

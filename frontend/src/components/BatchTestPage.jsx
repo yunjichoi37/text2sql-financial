@@ -24,7 +24,8 @@ const HISTORY_COLUMNS = [
     key: 'scope', 
     header: '범위', 
     sortable: true, 
-    width: pixel(300) },
+    width: pixel(290) 
+  },
   {
     key: 'status',
     header: '상태',
