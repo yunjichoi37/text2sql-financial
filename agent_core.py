@@ -36,7 +36,7 @@ GCP_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 MAX_ROWS_IN_CONTEXT = 10       # 이 이하면 텍스트로 반환
 OUTPUT_DIR = "query_outputs"    # CSV 저장 폴더
 
-USE_TABLE_FILTERING = True   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
+USE_TABLE_FILTERING = False   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
 
 # IMPORTANT: When filtering a TEXT column against a literal value, you MUST use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '='. Never use '=' for TEXT literal filters — the exact casing stored in the database may differ from the casing in the question.
 AGENT_PREFIX = """You are a SQL expert connected to a PostgreSQL database.
@@ -51,6 +51,9 @@ Rules:
 7. If the result shows only a preview, inform the user that the full data will be saved as a CSV file automatically.
 8. Always alias aggregate functions. (e.g. COUNT(*) AS count, SUM(amount) AS total)
 9. When filtering a TEXT column against a literal value, use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '=', since the exact casing stored in the database may differ from the casing in the question.
+10. If the question refers to a concept that has no exactly matching column, but a related column exists per its metadata description (e.g. an aggregate/summary field), use that column as a best-effort proxy instead of refusing to answer.
+11. If the question is accompanied by an 'Evidence' hint, treat it as authoritative domain guidance for interpreting the question — even if it seems to conflict with your own reading of the schema. Follow it exactly.
+12. For "highest X and lowest Y"-style questions, rank with ORDER BY col1, col2 LIMIT 1 rather than combining independent WHERE col = MIN(...) conditions with AND, which often returns 0 rows.
 
 Metadata Format:
 - Each table starts with [Table: table_name]
@@ -163,6 +166,12 @@ def make_execute_sql_query_tool(results_holder: dict):
 
             # 4. 행 수에 따라 분기
             results_holder["data"] = results
+            if len(results) == 0:
+                return (
+                    "쿼리 실행 완료: 결과 0행.\n"
+                    "조건이 의도보다 엄격하지 않은지 재검토하고 필요하면 다른 방식으로 다시 시도하세요. "
+                    "재검토 후에도 0행이 맞다면 그대로 보고하세요."
+                )
             if len(results) <= MAX_ROWS_IN_CONTEXT:
                 return str(results) # 10행 이하면 llm에 전체 결과 전달
 
@@ -261,9 +270,13 @@ def load_metadata_for_query(user_input: str) -> tuple[list[str], str, str]:
 def run_query(user_input: str, evidence: str | None = None) -> dict:
     """
     사용자 질문 하나를 처리하고 결과 dict를 반환한다.
-    evidence는 호출부 호환을 위해 받기만 하고, 아직 질문/프롬프트 반영하지 않는다.
+    evidence가 있으면 사용자 질문 메시지에 Evidence로 덧붙여 전달한다.
     """
     relevant_tables, table_meta, rel_meta = load_metadata_for_query(user_input)
+
+    query_input = user_input
+    if evidence:
+        query_input += (f"\nEvidence: {evidence}\n")
 
     dynamic_prefix = AGENT_PREFIX
     if table_meta:
@@ -280,7 +293,7 @@ def run_query(user_input: str, evidence: str | None = None) -> dict:
     invoke_config = {}
 
     try:
-        response = agent_executor.invoke({"messages":[HumanMessage(content=user_input)]}, invoke_config or {})
+        response = agent_executor.invoke({"messages":[HumanMessage(content=query_input)]}, invoke_config or {})
         messages = response.get("messages", [])
         answer = ""
         for msg in reversed(messages):
