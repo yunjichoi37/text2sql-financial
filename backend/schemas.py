@@ -103,6 +103,10 @@ class BatchRunItemOut(BaseModel):
     created_at: datetime
 
 
+class BatchRunUpdate(BaseModel):
+    label: str | None = None
+
+
 class BatchRunOut(BaseModel):
     id: int
     label: str | None = None

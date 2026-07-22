@@ -63,6 +63,14 @@ export function getBatchRun(id) {
   return fetch(`/api/batch-runs/${id}`).then(handle)
 }
 
+export function updateBatchRunLabel(id, label) {
+  return fetch(`/api/batch-runs/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label }),
+  }).then(handle)
+}
+
 export function getTableRows(tableName, page, pageSize) {
   return fetch(`/api/tables/${tableName}/rows?page=${page}&page_size=${pageSize}`).then(handle)
 }

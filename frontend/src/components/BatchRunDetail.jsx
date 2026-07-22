@@ -8,6 +8,7 @@ import {
 } from '@astryxdesign/core/Table'
 import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
+import { Pencil } from 'lucide-react'
 import RunDetailDialog from './RunDetailDialog'
 import VerdictBadge from './VerdictBadge'
 
@@ -63,8 +64,12 @@ function useClickableRowPlugin(onSelect) {
   )
 }
 
-export default function BatchRunDetail({ run, onBack }) {
+export default function BatchRunDetail({ run, onBack, onLabelUpdate }) {
   const [selectedItem, setSelectedItem] = useState(null)
+  const [editingLabel, setEditingLabel] = useState(false)
+  const [labelDraft, setLabelDraft] = useState(run.label || '')
+  const [labelBusy, setLabelBusy] = useState(false)
+  const [labelError, setLabelError] = useState(null)
   const isAtBottomRef = useRef(true)
   const prevItemCountRef = useRef(run.items.length)
 
@@ -89,6 +94,30 @@ export default function BatchRunDetail({ run, onBack }) {
     setSelectedItem({ ...item, mode: 'testset' })
   }
 
+  function startEditLabel() {
+    setLabelDraft(run.label || '')
+    setLabelError(null)
+    setEditingLabel(true)
+  }
+
+  function cancelEditLabel() {
+    setEditingLabel(false)
+    setLabelError(null)
+  }
+
+  async function saveLabel() {
+    setLabelBusy(true)
+    setLabelError(null)
+    try {
+      await onLabelUpdate(run.id, labelDraft.trim() || null)
+      setEditingLabel(false)
+    } catch (e) {
+      setLabelError(e.message)
+    } finally {
+      setLabelBusy(false)
+    }
+  }
+
   const clickableRowPlugin = useClickableRowPlugin(handleSelectItem)
   const config = run.config_snapshot
   const numberedItems = run.items.map((item, i) => ({ ...item, seq: i + 1 }))
@@ -103,7 +132,55 @@ export default function BatchRunDetail({ run, onBack }) {
     <div className="batch-detail">
       <div className="batch-detail-header">
         <div className="batch-detail-header-title">
-          <h2>{run.label || `배치 #${run.id}`}</h2>
+          {editingLabel ? (
+            <input
+              className="batch-label-input"
+              value={labelDraft}
+              onChange={(e) => setLabelDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveLabel()
+                if (e.key === 'Escape') cancelEditLabel()
+              }}
+              disabled={labelBusy}
+              autoFocus
+            />
+          ) : (
+            <h2>{run.label || `배치 #${run.id}`}</h2>
+          )}
+          {editingLabel ? (
+            <>
+              <Button
+                className="batch-label-edit-button"
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                icon={<Icon icon="check" size="sm" color="gray" />}
+                label="저장"
+                isDisabled={labelBusy}
+                onClick={saveLabel}
+              />
+              <Button
+                className="batch-label-edit-button"
+                variant="ghost"
+                size="sm"
+                isIconOnly
+                icon={<Icon icon="close" size="sm" color="gray" />}
+                label="취소"
+                isDisabled={labelBusy}
+                onClick={cancelEditLabel}
+              />
+            </>
+          ) : (
+            <Button
+              className="batch-label-edit-button"
+              variant="ghost"
+              size="sm"
+              isIconOnly
+              icon={<Icon icon={Pencil} size="sm" color="gray" />}
+              label="테스트명 수정"
+              onClick={startEditLabel}
+            />
+          )}
           <span className="muted">{new Date(run.started_at).toLocaleString()}</span>
         </div>
         <Button
@@ -115,6 +192,8 @@ export default function BatchRunDetail({ run, onBack }) {
           onClick={onBack}
         />
       </div>
+
+      {labelError && <div className="cell-error">이름 수정 실패: {labelError}</div>}
 
       <div className="run-detail-meta">
         <span className={`batch-status-tag batch-status-${run.status}`}>

@@ -8,7 +8,7 @@ import {
   useTableSortable,
   useTableSortableState,
 } from '@astryxdesign/core/Table'
-import { getBatchRun, listBatchRuns } from '../api'
+import { getBatchRun, listBatchRuns, updateBatchRunLabel } from '../api'
 import BatchRunDetail from './BatchRunDetail'
 import BatchRunForm from './BatchRunForm'
 
@@ -133,8 +133,19 @@ export default function BatchTestPage() {
     await openDetail(id)
   }
 
+  async function handleLabelUpdate(id, label) {
+    const updated = await updateBatchRunLabel(id, label)
+    setDetailBatch((prev) => (prev && prev.id === id ? { ...prev, label: updated.label } : prev))
+  }
+
   if (detailBatch) {
-    return <BatchRunDetail run={detailBatch} onBack={() => setDetailBatch(null)} />
+    return (
+      <BatchRunDetail
+        run={detailBatch}
+        onBack={() => setDetailBatch(null)}
+        onLabelUpdate={handleLabelUpdate}
+      />
+    )
   }
 
   return (

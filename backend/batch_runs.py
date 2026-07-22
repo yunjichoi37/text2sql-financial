@@ -8,7 +8,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from agent_core import get_current_config
 from backend.cells import execute_cell
 from backend.db import dict_cursor, get_conn
-from backend.schemas import BatchRunCreate, BatchRunDetailOut, BatchRunOut
+from backend.schemas import BatchRunCreate, BatchRunDetailOut, BatchRunOut, BatchRunUpdate
 from backend.testset import list_testset_items_by_ids
 
 
@@ -126,6 +126,21 @@ def _finalize_batch_run(batch_run_id: int, duration_ms: int) -> None:
         conn.close()
 
 
+def _update_batch_run_label(batch_run_id: int, label: str | None) -> dict | None:
+    conn = get_conn()
+    try:
+        cur = dict_cursor(conn)
+        cur.execute(
+            "UPDATE batch_runs SET label = %s WHERE id = %s RETURNING *",
+            (label, batch_run_id),
+        )
+        row = cur.fetchone()
+        cur.close()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
 def _fail_batch_run(batch_run_id: int, error: str) -> None:
     conn = get_conn()
     try:
@@ -205,6 +220,15 @@ def list_batch_runs_endpoint():
         return [dict(r) for r in rows]
     finally:
         conn.close()
+
+
+@router.put("/{batch_run_id}", response_model=BatchRunOut)
+def update_batch_run_endpoint(batch_run_id: int, payload: BatchRunUpdate):
+    label = payload.label.strip() if payload.label else None
+    row = _update_batch_run_label(batch_run_id, label)
+    if row is None:
+        raise HTTPException(404, "배치 실행을 찾을 수 없습니다.")
+    return row
 
 
 @router.get("/{batch_run_id}", response_model=BatchRunDetailOut)

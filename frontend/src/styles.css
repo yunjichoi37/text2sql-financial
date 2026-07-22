@@ -722,6 +722,21 @@
   gap: 12px;
 }
 
+.batch-detail-header-title .muted {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.batch-label-edit-button {
+  position: relative;
+  top: 3px;
+  opacity: 0.45;
+}
+
+.batch-label-edit-button:hover {
+  opacity: 0.8;
+}
+
 .batch-back-button {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -736,6 +751,23 @@
   margin: 0;
   font-size: 20px;
   color: var(--text-h);
+}
+
+.batch-label-input {
+  font: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  min-width: 240px;
+}
+
+.batch-label-input:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 @media (prefers-color-scheme: dark) {
