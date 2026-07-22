@@ -107,14 +107,19 @@ export default function BatchTestPage() {
   useEffect(() => {
     if (!detailBatch || detailBatch.status !== 'running') return undefined
     const id = detailBatch.id
+    let cancelled = false
     const interval = setInterval(async () => {
       try {
-        setDetailBatch(await getBatchRun(id))
+        const data = await getBatchRun(id)
+        if (!cancelled) setDetailBatch(data)
       } catch {
         clearInterval(interval)
       }
     }, 1500)
-    return () => clearInterval(interval)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [detailBatch?.id, detailBatch?.status])
 
   const { sortedData: sortedHistory, sortConfig } = useTableSortableState({
