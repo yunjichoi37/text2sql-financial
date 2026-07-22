@@ -7,6 +7,7 @@ import {
   useTableSortableState,
 } from '@astryxdesign/core/Table'
 import { Button } from '@astryxdesign/core/Button'
+import { Collapsible } from '@astryxdesign/core/Collapsible'
 import { Icon } from '@astryxdesign/core/Icon'
 import { Pencil } from 'lucide-react'
 import RunDetailDialog from './RunDetailDialog'
@@ -232,9 +233,11 @@ export default function BatchRunDetail({ run, onBack, onLabelUpdate }) {
             <dt>최대 표시 행 수</dt>
             <dd>{config.max_rows_in_context}</dd>
           </dl>
-          <pre className="sql-block">
-            <code>{config.agent_prefix}</code>
-          </pre>
+          <Collapsible className="agent-prefix-toggle" trigger="에이전트 프롬프트" defaultIsOpen={false}>
+            <pre className="sql-block">
+              <code>{config.agent_prefix}</code>
+            </pre>
+          </Collapsible>
         </>
       )}
 
