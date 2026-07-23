@@ -145,3 +145,40 @@ class TableRowsResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class AgentSettingsUpdate(BaseModel):
+    temperature: float | None = None
+    use_table_filtering: bool | None = None
+    use_evidence: bool | None = None
+    agent_prefix: str | None = None
+    query_reminder: str | None = None
+
+
+class AgentSettingsOut(BaseModel):
+    temperature: float
+    use_table_filtering: bool
+    use_evidence: bool
+    agent_prefix: str
+    query_reminder: str
+    updated_at: datetime
+
+
+class AgentSettingsPreviewRequest(BaseModel):
+    question: str
+    evidence: str | None = None
+    temperature: float | None = None
+    use_table_filtering: bool | None = None
+    use_evidence: bool | None = None
+    agent_prefix: str | None = None
+    query_reminder: str | None = None
+
+
+class AgentSettingsPreviewOut(BaseModel):
+    ai_sql: str | None = None
+    ai_answer: str | None = None
+    ai_result: list[dict] | None = None
+    relevant_tables: list[str] | None = None
+    intermediate_steps: list[dict] | None = None
+    error: str | None = None
+    duration_ms: int | None = None

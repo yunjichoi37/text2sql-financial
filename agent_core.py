@@ -5,7 +5,8 @@
 - CSV 저장
 - LLM / Agent 생성 및 실행
 - 메타데이터 로딩 위임 (metadata_loader)
-- 모듈 레벨 싱글톤으로 LLM 객체 1회 생성 → 성능 유지
+- LLM 객체는 (model, temperature) 조합별로 캐시해 재사용
+- 에이전트 설정(temperature, 테이블 필터링, 프롬프트 등)은 agent_settings 테이블에서 읽음
 """
 
 import os
@@ -35,34 +36,6 @@ GCP_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 MAX_ROWS_IN_CONTEXT = 10       # 이 이하면 텍스트로 반환
 OUTPUT_DIR = "query_outputs"    # CSV 저장 폴더
-
-USE_TABLE_FILTERING = False   # 테이블 수 적을 때(현재 8개)는 LLM 호출 없이 전체 테이블 사용. 나중에 늘어나면 True로 전환.
-
-# IMPORTANT: When filtering a TEXT column against a literal value, you MUST use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '='. Never use '=' for TEXT literal filters — the exact casing stored in the database may differ from the casing in the question.
-AGENT_PREFIX = """You are a SQL expert connected to a PostgreSQL database.
-
-Rules:
-1. Always use standard PostgreSQL syntax.
-2. Use the 'execute_sql_query' tool to fetch data.
-3. Always verify column names with the provided metadata below before writing a query.
-4. Only use the available tables and columns. Never assume or invent names.
-5. Do NOT use markdown code blocks inside the tool input, pass the raw string.
-6. Report query results as facts. Do NOT add disclaimers or caveats.
-7. If the result shows only a preview, inform the user that the full data will be saved as a CSV file automatically.
-8. Always alias aggregate functions. (e.g. COUNT(*) AS count, SUM(amount) AS total)
-9. When filtering a TEXT column against a literal value, use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '=', since the exact casing stored in the database may differ from the casing in the question.
-10. If the question refers to a concept that has no exactly matching column, but a related column exists per its metadata description (e.g. an aggregate/summary field), use that column as a best-effort proxy instead of refusing to answer.
-11. If the question is accompanied by an 'Evidence' hint, treat it as authoritative domain guidance for interpreting the question — even if it seems to conflict with your own reading of the schema. Follow it exactly.
-12. For "highest X and lowest Y"-style questions, rank with ORDER BY col1, col2 LIMIT 1 rather than combining independent WHERE col = MIN(...) conditions with AND, which often returns 0 rows.
-
-Metadata Format:
-- Each table starts with [Table: table_name]
-- Each column is listed as "col_name (type): description"
-- If a column has an indented "values:" line below it, that line lists the possible values or format notes for that column verbatim — read it carefully before filtering/comparing on that column.
-- [Joins] section (if present) lists the recommended JOIN conditions between the selected tables.
-"""
-
-QUERY_REMINDER = "\n\nReminder: use ILIKE (never '=') for any TEXT column literal comparison."
 
 # ------------- 로그 관련 설정  -------------
 import sys
@@ -99,31 +72,52 @@ ALL_TABLES: list[str] = get_extracted_tables()
 
 
 MODEL_NAME = "gemini-2.5-flash"
-TEMPERATURE = 0
 
-# LLM singleton
-_llm: ChatVertexAI | None = None
-def get_llm() -> ChatVertexAI:
-    """LLM 객체를 싱글톤으로 반환한다."""
-    global _llm
-    if _llm is None:
-        _llm = ChatVertexAI(
-            model_name=MODEL_NAME,
+# (model_name, temperature) 조합별 LLM 인스턴스 캐시 — 세팅 페이지에서 temperature를 바꿔도
+# 매번 재생성하지 않고, 이전에 쓰던 조합이면 재사용한다.
+_llm_cache: dict[tuple[str, float], ChatVertexAI] = {}
+def get_llm(model_name: str, temperature: float) -> ChatVertexAI:
+    key = (model_name, temperature)
+    if key not in _llm_cache:
+        _llm_cache[key] = ChatVertexAI(
+            model_name=model_name,
             project=GCP_PROJECT,
             location=GCP_LOCATION,
-            temperature=TEMPERATURE,
+            temperature=temperature,
         )
-    return _llm
+    return _llm_cache[key]
+
+
+def load_agent_settings() -> dict:
+    """agent_settings 테이블(싱글톤 row)에서 현재 에이전트 설정을 읽어온다.
+    웹의 '에이전트 세팅' 페이지에서 편집한 값이 여기 반영된다."""
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT temperature, use_table_filtering, use_evidence, agent_prefix, query_reminder "
+            "FROM agent_settings WHERE id = 1"
+        )
+        row = cur.fetchone()
+        cur.close()
+    finally:
+        conn.close()
+
+    temperature, use_table_filtering, use_evidence, agent_prefix, query_reminder = row
+    return {
+        "temperature": temperature,
+        "use_table_filtering": use_table_filtering,
+        "use_evidence": use_evidence,
+        "agent_prefix": agent_prefix,
+        "query_reminder": query_reminder,
+    }
 
 
 def get_current_config() -> dict:
-    """배치 실행 시점에 스냅샷으로 저장할, 실행 전반에 걸쳐 고정인 에이전트 설정."""
+    """배치 실행 시점에 스냅샷으로 저장할, 실행 전반에 걸친 에이전트 설정."""
     return {
+        **load_agent_settings(),
         "model_name": MODEL_NAME,
-        "temperature": TEMPERATURE,
-        "agent_prefix": AGENT_PREFIX,
-        "query_reminder": QUERY_REMINDER,
-        "use_table_filtering": USE_TABLE_FILTERING,
         "max_rows_in_context": MAX_ROWS_IN_CONTEXT,
     }
 
@@ -225,8 +219,7 @@ def save_csv_if_needed(results_holder: dict) -> tuple[str | None, pd.DataFrame |
     return csv_path, df
 
 
-def build_agent_executor(dynamic_prefix: str, results_holder: dict):
-    llm   = get_llm()
+def build_agent_executor(dynamic_prefix: str, results_holder: dict, llm: ChatVertexAI):
     tools = [make_execute_sql_query_tool(results_holder)]
 
     return create_agent(model=llm, tools=tools, system_prompt=dynamic_prefix)
@@ -249,13 +242,13 @@ enc = tiktoken.get_encoding("cl100k_base")
 def count_tokens(text: str) -> int:
     return len(enc.encode(text))
 
-def load_metadata_for_query(user_input: str) -> tuple[list[str], str, str]:
+def load_metadata_for_query(user_input: str, use_table_filtering: bool) -> tuple[list[str], str, str]:
     """
     사용자 질문에서 관련 테이블을 찾고 메타데이터를 로드한다.
     Returns: (relevant_tables, table_meta, rel_meta)
     """
-    if USE_TABLE_FILTERING:
-        llm = get_llm()
+    if use_table_filtering:
+        llm = get_llm(MODEL_NAME, 0)
         relevant_tables = get_relevant_tables(user_input, llm, ALL_TABLES)
     else:
         relevant_tables = ALL_TABLES
@@ -267,28 +260,34 @@ def load_metadata_for_query(user_input: str) -> tuple[list[str], str, str]:
     print(f"[TOKEN] rel_meta:   {count_tokens(rel_meta)}")
     return relevant_tables, table_meta, rel_meta
 
-def run_query(user_input: str, evidence: str | None = None) -> dict:
+def run_query(user_input: str, evidence: str | None = None, settings: dict | None = None) -> dict:
     """
     사용자 질문 하나를 처리하고 결과 dict를 반환한다.
-    evidence가 있으면 사용자 질문 메시지에 Evidence로 덧붙여 전달한다.
+    evidence가 있으면(그리고 settings의 use_evidence가 켜져 있으면) 사용자 질문 메시지에
+    Evidence로 덧붙여 전달한다. settings를 생략하면 agent_settings 테이블의 현재 값을 사용한다
+    (에이전트 세팅 페이지의 '미리보기'는 저장 전 값을 settings로 직접 넘겨서 실행한다).
     """
-    relevant_tables, table_meta, rel_meta = load_metadata_for_query(user_input)
+    settings = settings or load_agent_settings()
+    relevant_tables, table_meta, rel_meta = load_metadata_for_query(
+        user_input, settings["use_table_filtering"]
+    )
 
     query_input = user_input
-    if evidence:
+    if evidence and settings["use_evidence"]:
         query_input += (f"\nEvidence: {evidence}\n")
 
-    dynamic_prefix = AGENT_PREFIX
+    dynamic_prefix = settings["agent_prefix"]
     if table_meta:
         dynamic_prefix += f"\n\n{table_meta}"
     if rel_meta:
         dynamic_prefix += f"\n\n{rel_meta}"
-    dynamic_prefix += QUERY_REMINDER
+    dynamic_prefix += settings["query_reminder"]
     print(table_meta)
     print(rel_meta)
 
     results_holder = {"data": None}  # 이 run_query 호출 전용 결과 컨테이너
-    agent_executor = build_agent_executor(dynamic_prefix, results_holder) # agent 생성
+    llm = get_llm(MODEL_NAME, settings["temperature"])
+    agent_executor = build_agent_executor(dynamic_prefix, results_holder, llm) # agent 생성
 
     invoke_config = {}
 

@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend import batch_runs, cell_runs, cells, tables, testset
+from backend import agent_settings, batch_runs, cell_runs, cells, tables, testset
 
 app = FastAPI(title="Text2SQL Financial Agent API")
 
@@ -18,6 +18,7 @@ app.include_router(cells.router)
 app.include_router(cell_runs.router)
 app.include_router(batch_runs.router)
 app.include_router(tables.router)
+app.include_router(agent_settings.router)
 
 
 @app.get("/health")

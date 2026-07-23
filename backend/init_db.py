@@ -140,6 +140,51 @@ CREATE INDEX IF NOT EXISTS idx_batch_run_items_batch_run_id ON batch_run_items (
 CREATE INDEX IF NOT EXISTS idx_batch_runs_started_at ON batch_runs (started_at);
 """
 
+CREATE_TABLE_AGENT_SETTINGS_SQL = """
+CREATE TABLE IF NOT EXISTS agent_settings (
+    id                   SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    temperature          DOUBLE PRECISION NOT NULL DEFAULT 0,
+    use_table_filtering  BOOLEAN NOT NULL DEFAULT false,
+    use_evidence         BOOLEAN NOT NULL DEFAULT true,
+    agent_prefix         TEXT NOT NULL DEFAULT '',
+    query_reminder       TEXT NOT NULL DEFAULT '',
+    updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+"""
+
+SEED_AGENT_SETTINGS_SQL = """
+INSERT INTO agent_settings (id, temperature, use_table_filtering, use_evidence, agent_prefix, query_reminder)
+VALUES (1, %s, %s, %s, %s, %s)
+ON CONFLICT (id) DO NOTHING;
+"""
+
+# agent_core.py의 기존 AGENT_PREFIX/QUERY_REMINDER 값을 최초 1회 시드용으로 복사한 것.
+# 이후로는 이 값이 아니라 agent_settings 테이블(웹 UI로 편집)이 진짜 값의 출처가 된다.
+_SEED_AGENT_PREFIX = """You are a SQL expert connected to a PostgreSQL database.
+
+Rules:
+1. Always use standard PostgreSQL syntax.
+2. Use the 'execute_sql_query' tool to fetch data.
+3. Always verify column names with the provided metadata below before writing a query.
+4. Only use the available tables and columns. Never assume or invent names.
+5. Do NOT use markdown code blocks inside the tool input, pass the raw string.
+6. Report query results as facts. Do NOT add disclaimers or caveats.
+7. If the result shows only a preview, inform the user that the full data will be saved as a CSV file automatically.
+8. Always alias aggregate functions. (e.g. COUNT(*) AS count, SUM(amount) AS total)
+9. When filtering a TEXT column against a literal value, use a case-insensitive comparison (ILIKE, or LOWER(col) = LOWER('value')) instead of '=', since the exact casing stored in the database may differ from the casing in the question.
+10. If the question refers to a concept that has no exactly matching column, but a related column exists per its metadata description (e.g. an aggregate/summary field), use that column as a best-effort proxy instead of refusing to answer.
+11. If the question is accompanied by an 'Evidence' hint, treat it as authoritative domain guidance for interpreting the question — even if it seems to conflict with your own reading of the schema. Follow it exactly.
+12. For "highest X and lowest Y"-style questions, rank with ORDER BY col1, col2 LIMIT 1 rather than combining independent WHERE col = MIN(...) conditions with AND, which often returns 0 rows.
+
+Metadata Format:
+- Each table starts with [Table: table_name]
+- Each column is listed as "col_name (type): description"
+- If a column has an indented "values:" line below it, that line lists the possible values or format notes for that column verbatim — read it carefully before filtering/comparing on that column.
+- [Joins] section (if present) lists the recommended JOIN conditions between the selected tables.
+"""
+
+_SEED_QUERY_REMINDER = "\n\nReminder: use ILIKE (never '=') for any TEXT column literal comparison."
+
 
 def main() -> None:
     conn = psycopg2.connect(DATABASE_URL)
@@ -158,8 +203,13 @@ def main() -> None:
         cur.execute(CREATE_TABLE_BATCH_RUNS_SQL)
         cur.execute(CREATE_TABLE_BATCH_RUN_ITEMS_SQL)
         cur.execute(CREATE_INDEX_BATCH_RUNS_SQL)
+        cur.execute(CREATE_TABLE_AGENT_SETTINGS_SQL)
+        cur.execute(
+            SEED_AGENT_SETTINGS_SQL,
+            (0, False, True, _SEED_AGENT_PREFIX, _SEED_QUERY_REMINDER),
+        )
         cur.close()
-        print("cells / cell_runs / batch_runs / batch_run_items 테이블 준비 완료")
+        print("cells / cell_runs / batch_runs / batch_run_items / agent_settings 테이블 준비 완료")
     finally:
         conn.close()
 
