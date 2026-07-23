@@ -10,18 +10,9 @@ from backend.comparison import compare_results, compute_soft_f1
 from backend.db import dict_cursor, get_conn
 from backend.schemas import CellCreate, CellOut, CellUpdate
 from backend.testset import get_testset_question
-from backend.utils import to_jsonable_records
+from backend.utils import extract_last_sql, to_jsonable_records
 
 router = APIRouter(prefix="/api/cells", tags=["cells"])
-
-
-def _extract_last_sql(intermediate_steps: list[dict]) -> str | None:
-    for step in reversed(intermediate_steps):
-        if step.get("tool") == "execute_sql_query":
-            sql = step.get("input", {}).get("sql_query")
-            if sql:
-                return sql
-    return None
 
 
 def execute_cell(mode: str, question: str, gold_sql: str | None, evidence: str | None = None) -> dict:
@@ -47,7 +38,7 @@ def execute_cell(mode: str, question: str, gold_sql: str | None, evidence: str |
             "duration_ms": duration_ms,
         }
 
-    ai_sql = _extract_last_sql(intermediate_steps or [])
+    ai_sql = extract_last_sql(intermediate_steps or [])
     ai_result = to_jsonable_records(result.get("df"))
     ai_answer = result.get("answer")
 

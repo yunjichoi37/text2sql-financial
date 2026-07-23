@@ -28,3 +28,13 @@ def to_jsonable_records(df: pd.DataFrame | None) -> list[dict] | None:
         return None
     records = df.to_dict(orient="records")
     return [{k: _json_safe(v) for k, v in row.items()} for row in records]
+
+
+def extract_last_sql(intermediate_steps: list[dict]) -> str | None:
+    """intermediate_steps에서 가장 마지막에 실행된 SQL 쿼리를 추출한다."""
+    for step in reversed(intermediate_steps):
+        if step.get("tool") == "execute_sql_query":
+            sql = step.get("input", {}).get("sql_query")
+            if sql:
+                return sql
+    return None
