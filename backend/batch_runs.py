@@ -154,12 +154,20 @@ def _fail_batch_run(batch_run_id: int, error: str) -> None:
         conn.close()
 
 
-def _run_batch(batch_run_id: int, items: list[dict]) -> None:
+def _run_batch(batch_run_id: int, items: list[dict], config_snapshot: dict) -> None:
+    """config_snapshot: 배치 시작 시점의 에이전트 설정. 배치가 도는 동안 '에이전트 세팅' 페이지에서
+    값을 바꿔도 이미 시작된 배치는 끝까지 이 값으로만 실행되도록 각 문항에 그대로 전달한다."""
     start = time.perf_counter()
     try:
         for item in items:
             try:
-                exec_result = execute_cell("testset", item["question"], item["SQL"], item.get("evidence"))
+                exec_result = execute_cell(
+                    "testset",
+                    item["question"],
+                    item["SQL"],
+                    item.get("evidence"),
+                    settings=config_snapshot,
+                )
                 _insert_batch_run_item(
                     batch_run_id=batch_run_id,
                     testset_question_id=item["question_id"],
@@ -205,7 +213,7 @@ def create_batch_run(payload: BatchRunCreate, background_tasks: BackgroundTasks)
     scope = _build_scope_label(items)
     config_snapshot = get_current_config()
     row = _insert_batch_run(payload.label, scope, len(items), config_snapshot)
-    background_tasks.add_task(_run_batch, row["id"], items)
+    background_tasks.add_task(_run_batch, row["id"], items, config_snapshot)
     return row
 
 

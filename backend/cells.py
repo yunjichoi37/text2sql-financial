@@ -15,11 +15,19 @@ from backend.utils import extract_last_sql, to_jsonable_records
 router = APIRouter(prefix="/api/cells", tags=["cells"])
 
 
-def execute_cell(mode: str, question: str, gold_sql: str | None, evidence: str | None = None) -> dict:
+def execute_cell(
+    mode: str,
+    question: str,
+    gold_sql: str | None,
+    evidence: str | None = None,
+    settings: dict | None = None,
+) -> dict:
     """agent_core.run_query 실행 + (testset이면) 정답 SQL 실행/비교까지 수행하고
-    cells 테이블에 반영할 필드 dict를 반환한다."""
+    cells 테이블에 반영할 필드 dict를 반환한다.
+    settings를 넘기면(배치 실행) 그 값을 그대로 쓰고, 생략하면(개별 셀 실행)
+    agent_settings 테이블의 현재 값을 사용한다."""
     start = time.perf_counter()
-    result = run_query(question, evidence)
+    result = run_query(question, evidence, settings=settings)
     duration_ms = round((time.perf_counter() - start) * 1000)
     relevant_tables = result.get("relevant_tables")
     intermediate_steps = result.get("intermediate_steps")
