@@ -74,3 +74,23 @@ export function updateBatchRunLabel(id, label) {
 export function getTableRows(tableName, page, pageSize) {
   return fetch(`/api/tables/${tableName}/rows?page=${page}&page_size=${pageSize}`).then(handle)
 }
+
+export function getAgentSettings() {
+  return fetch('/api/agent-settings').then(handle)
+}
+
+export function updateAgentSettings(body) {
+  return fetch('/api/agent-settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(handle)
+}
+
+export function previewAgentSettings(body) {
+  return fetch('/api/agent-settings/preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(handle)
+}

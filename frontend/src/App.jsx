@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button'
 import { Icon } from '@astryxdesign/core/Icon'
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav'
 import { createCell, deleteCell, listCellRuns, listCells, listTables, updateCell } from './api'
+import AgentSettingsPage from './components/AgentSettingsPage'
 import BatchTestPage from './components/BatchTestPage'
 import CellList from './components/CellList'
 import HistoryPanel from './components/HistoryPanel'
@@ -52,6 +53,13 @@ const NAV_ITEMS = [
     description: '테스트셋 전체(또는 난이도별)를 한 번에 실행해 정확도와 소요시간을 비교합니다.',
     color: '#dc2626',
     iconPath: 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  },
+  {
+    id: 'settings',
+    label: '에이전트 세팅',
+    description: 'temperature, 테이블 필터링, evidence 사용 여부, 에이전트 프롬프트를 편집하고 미리보기로 실행해봅니다.',
+    color: '#4b5563',
+    iconPath: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z',
   },
 ]
 
@@ -167,7 +175,9 @@ function App() {
             </SideNavItem>
           )}
 
-          {NAV_ITEMS.filter((item) => item.id === 'history' || item.id === 'batch').map((item) => (
+          {NAV_ITEMS.filter(
+            (item) => item.id === 'history' || item.id === 'batch' || item.id === 'settings'
+          ).map((item) => (
             <SideNavItem
               key={item.id}
               label={item.label}
@@ -238,6 +248,7 @@ function App() {
           )}
           {!loading && !error && view === 'history' && <HistoryPanel runs={cellRuns} />}
           {!loading && !error && view === 'batch' && <BatchTestPage />}
+          {!loading && !error && view === 'settings' && <AgentSettingsPage />}
           {view === 'tables' && selectedTable && (
             <TableView
               key={selectedTable.name}
